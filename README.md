@@ -186,7 +186,7 @@ de CustomerSession dans l'intégration — le réaffichage de la carte enregistr
 `customer` porté par la session. La preuve de l'enregistrement reste sur le moyen de
 paiement : `allow_redisplay: 'always'` et rattachement au client.
 
-**Adaptive Pricing — quatre choses mesurées sur ce compte, dont deux contre-intuitives.**
+**Adaptive Pricing — quatre choses mesurées sur ce compte, dont trois contre-intuitives.**
 
 *Le réglage du Dashboard est déjà actif.* Les sessions Checkout de ce sandbox reviennent en
 `adaptive_pricing.enabled = true` alors que le code ne demandait rien. Le paramètre de
@@ -218,11 +218,23 @@ et le remboursement — qui porte ce que le voyageur a réglé. Le champ est **a
 aucune conversion n'a eu lieu, pas `null` : le billet ne teste donc pas l'égalité à `null`.
 Corollaire rassurant pour le rapprochement : `/ops` continue de compter des euros.
 
-*La liste des moyens de paiement ne change pas.* On pourrait l'attendre — elle ne bouge pas
-ici : `cartes_bancaires` reste affiché sous une présentation en livres. **Ne promettez pas au
-comité que la conversion débloque des moyens locaux** ; l'effet visible est la devise, le
-sélecteur de devise, et la ligne de taux garanti (« 1 EUR = 0,8935 GBP, frais de conversion
-de 4 % inclus »). Pour que le basculement ouvre aussi Pay by Bank ou Klarna, il faudrait
+*La liste des moyens de paiement change — dans le sens qu'on n'attend pas.* Le réflexe est
+d'annoncer que la conversion « débloque les moyens locaux ». C'est l'inverse qui se produit
+ici : **PayPal disparaît** quand la conversion est active. Mesuré des deux côtés, à état égal,
+et lisible sur la session : `payment_method_types` vaut `["card","link","paypal"]` quand
+`adaptive_pricing.enabled` est `false`, et `["card","link"]` quand il est `true` — l'accordéon
+du Payment Element suit exactement, deux lignes en euros (« Carte bancaire », « PayPal »), une
+seule sous présentation en livres. `cartes_bancaires` n'est pas concerné : il ne figure jamais
+dans `payment_method_types` (il est fusionné dans la ligne « Carte bancaire ») et Link reste
+présent, en bloc d'enregistrement en ligne. Les portefeuilles (`apple_pay`, `google_pay`)
+n'apparaissent dans aucun des deux cas — ni dans cette liste, qui ne porte que les moyens
+résolus côté serveur, ni à l'écran, faute de domaine vérifié sur `localhost`.
+
+Donc : l'effet à montrer est la devise, le sélecteur de devise et la ligne de taux garanti
+(« 1 EUR = 0,8935 GBP, frais de conversion de 4 % inclus »), pas un élargissement du choix de
+paiement. Et si quelqu'un remarque que PayPal a disparu, la réponse est que PayPal n'est pas
+éligible à la présentation convertie sur ce compte, pas que la démonstration a changé de
+configuration. Pour que le basculement ouvre réellement Pay by Bank ou Klarna, il faudrait
 élargir la configuration des moyens de paiement — ce qui changerait la liste sur **tous** les
 autres beats. Écarté volontairement.
 

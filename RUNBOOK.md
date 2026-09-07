@@ -80,9 +80,12 @@ change à porter, et **aucun coût pour Velvet** — les 2 à 4 % de conversion 
 client qui choisit sa devise. Un remboursement repart au taux d'origine. Un interrupteur dans
 le Dashboard, aucune ligne de code de plus pour ouvrir un nouveau marché.
 
-⚠️ **Ne dites pas que la conversion débloque des moyens de paiement locaux** — vérifié, la
-liste ne change pas ici. Ce que ça change, c'est la devise. Et le panneau beige est
-volontairement hors charte : dites-le en une phrase, « ce réglage n'existe pas sur
+⚠️ **Ne dites pas que la conversion débloque des moyens de paiement locaux** — vérifié, c'est
+le contraire : **PayPal disparaît** de l'accordéon sous présentation en livres, et la session
+le dit (`payment_method_types` perd `paypal` quand la conversion est active). Ce que ça
+change, c'est la devise. Si quelqu'un le remarque : « PayPal n'est pas éligible à la
+présentation convertie sur ce compte » — n'improvisez pas mieux que ça. Et le panneau beige
+est volontairement hors charte : dites-le en une phrase, « ce réglage n'existe pas sur
 velvet.fr, c'est mon interrupteur de démonstration ».
 
 **FAIRE** Recliquer **Prix en euros** avant d'enchaîner : les beats 04:30 et 07:00 sont
@@ -277,10 +280,10 @@ Puis la question qui rend la main au comité :
 1. « Radar a demandé l'authentification » sur le billet à 75 € — c'est l'intégration.
 2. « Stripe envoie un événement quand le workflow écrit » — non, la console relit.
 3. « Voici votre commission » — c'est une commission simulée de test.
-4. « La conversion fait apparaître les moyens de paiement locaux » — vérifié, la liste ne
-   change pas ici. Ce qui change, c'est la devise.
+4. « La conversion fait apparaître les moyens de paiement locaux » — vérifié, c'est
+   l'inverse : PayPal disparaît sous présentation en livres. Ce qui change, c'est la devise.
 
-## Les trois choses à dire avant qu'on les remarque
+## Les choses à dire avant qu'on les remarque
 
 1. Apple Pay absent sur `localhost`, présent sur la page hébergée à 18:30.
 2. « Velvet sandbox » dans la case de consentement, si le compte n'est pas activé d'ici là.
@@ -288,3 +291,5 @@ Puis la question qui rend la main au comité :
    sur velvet.fr.
 4. L'adresse e-mail préremplie contient `+location_gb` : c'est l'adresse de test qui simule
    la localisation du voyageur, et elle est visible au beat 07:00.
+5. En livres, la ligne PayPal n'est plus là : PayPal n'est pas éligible à la présentation
+   convertie sur ce compte. Dites-le avant qu'on compte les lignes de l'accordéon.
