@@ -66,16 +66,17 @@ paiement » et racontez la configuration depuis là.
 ## 04:30 → 07:00 — Le refus, et le dossier qui survit
 
 **FAIRE** Carte **`4000 0000 0000 9995`**, expiration `12/34`, CVC `123`. Payer. Montrer le
-message d'erreur en français. **Pointer l'identifiant `pi_…` dans le panneau de droite.**
+message d'erreur en français. **Pointer l'identifiant `cs_…` dans le panneau de droite.**
 
 **DIRE** Un refus, c'est le cas normal, pas l'exception — plusieurs pour cent du trafic.
 Deux choses à regarder. La première : le message est en français et il est actionnable, le
 voyageur sait quoi faire. La seconde, et c'est celle qui compte pour Sqills :
-**l'identifiant de paiement n'a pas changé.** On ne crée pas une deuxième réservation, on
+**l'identifiant de la session de paiement n'a pas changé.** On ne crée pas une deuxième
+réservation, on
 ne dédouble pas le dossier. Le voyageur change de carte **dans le même dossier**.
 
 **SI ÇA CASSE** Refus non déclenché → `4000 0000 0000 0002`. Trop de tentatives sur la même
-intention → rechargez `/` pour repartir sur une intention neuve.
+session → rechargez `/` pour repartir sur une session neuve.
 
 ---
 
@@ -122,8 +123,9 @@ choix. Un débit déclenché par le marchand supprime le formulaire, ce qui dém
 que vaut la carte enregistrée. Le Payment Element reste la voie quand le voyageur doit
 choisir entre plusieurs cartes.
 
-**Ne cherchez pas `setup_future_usage`** dans le Dashboard, il vaut `null`. La preuve de
-l'enregistrement est `allow_redisplay: always` sur le moyen de paiement.
+**`setup_future_usage` vaut `off_session`** sur le paiement : la session Checkout le pose
+via `payment_intent_data`. L'autre preuve de l'enregistrement est `allow_redisplay: always`
+sur le moyen de paiement.
 
 ---
 

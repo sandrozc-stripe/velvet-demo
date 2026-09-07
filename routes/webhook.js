@@ -20,6 +20,8 @@ const WATCHED = new Set([
   'charge.succeeded',
   'charge.refunded',
   'checkout.session.completed',
+  'checkout.session.async_payment_succeeded',
+  'checkout.session.async_payment_failed',
   'checkout.session.expired',
   'payment_method.attached',
 ]);
@@ -94,6 +96,13 @@ router.post('/', async (req, res) => {
           updatedAt: Date.now(),
         });
       }
+    }
+
+    // La session Checkout ne crée son PaymentIntent qu'à la confirmation :
+    // c'est cet événement qui apprend au dossier quel paiement le porte, et
+    // donc ce que l'annulation depuis l'espace voyageur remboursera.
+    if (event.type.startsWith('checkout.session.')) {
+      store.linkCheckoutSession(o);
     }
 
     console.log(`[webhook] ${event.type} ${o.id} pnr=${ctx.pnr || '—'} statut=${status || '—'}`);

@@ -90,7 +90,10 @@
   </div>
 </footer>
 
-<script src="https://js.stripe.com/v3/"></script>
+<!-- Build « dahlia » de Stripe.js : c'est celui qui expose
+     initCheckoutElementsSdk, le point d'entrée des sessions Checkout en
+     ui_mode: 'elements'. -->
+<script src="https://js.stripe.com/dahlia/stripe.js"></script>
 <script src="/js/common.js"></script>
 <script src="/js/espace.js"></script>
 </body>

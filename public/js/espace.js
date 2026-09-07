@@ -140,8 +140,9 @@
     });
 
     // Les prestations complémentaires vendues depuis l'espace, réglées avec
-    // un Payment Element monté sur place : la sélection de carte enregistrée
-    // ou nouvelle se fait dans ce même Payment Element, pas via une redirection.
+    // un Payment Element monté sur place sur une session Checkout : la
+    // sélection de carte enregistrée ou nouvelle se fait dans ce même Payment
+    // Element, pas via une redirection.
     const ancillaryButtons = VELVET.el('ancillaries');
     const ancillaryForm = VELVET.el('ancillary-form');
     const ancillaryExpress = VELVET.el('ancillary-express');
@@ -155,13 +156,21 @@
       locale: 'fr',
       developerTools: { assistant: { enabled: true } },
     });
-    let ancillaryElements = null;
-    let ancillarySession = null;
+    let ancillaryCheckout = null;
+    let ancillaryActions = null;
+    let ancillaryOrder = null;
     let ancillarySubmitting = false;
+    let ancillaryMounted = [];
 
     function resetAncillaryForm() {
-      ancillaryElements = null;
-      ancillarySession = null;
+      // Les Elements appartiennent à l'instance Checkout : on les démonte
+      // explicitement, sinon la prestation suivante en monterait un second
+      // jeu, rattaché à une session déjà obsolète.
+      ancillaryMounted.forEach((element) => element.unmount());
+      ancillaryMounted = [];
+      ancillaryCheckout = null;
+      ancillaryActions = null;
+      ancillaryOrder = null;
       ancillarySubmitting = false;
       ancillaryForm.hidden = true;
       ancillaryForm.reset();
@@ -173,9 +182,9 @@
 
     // Une seule confirmation pour les deux chemins : le bouton « Payer » du
     // Payment Element et les boutons en un clic de l'Express Checkout Element
-    // règlent le même PaymentIntent, sur la même instance elements.
+    // règlent la même session Checkout, sur la même instance Checkout.
     function beginConfirmation() {
-      if (ancillarySubmitting || !ancillaryElements || !ancillarySession) return false;
+      if (ancillarySubmitting || !ancillaryActions || !ancillaryOrder) return false;
       ancillarySubmitting = true;
       ancillarySubmit.disabled = true;
       banner.hidden = true;
@@ -183,33 +192,35 @@
       return true;
     }
 
-    async function confirmAncillary() {
+    async function confirmAncillary(expressCheckoutConfirmEvent) {
       // redirect: 'if_required' garde le défi 3-D Secure dans une fenêtre
-      // modale : Camille ne quitte pas l'espace voyageur.
-      const { error, paymentIntent } = await stripe.confirmPayment({
-        elements: ancillaryElements,
-        confirmParams: { return_url: ancillarySession.returnUrl },
-        redirect: 'if_required',
-      });
+      // modale : Camille ne quitte pas l'espace voyageur. Pour un portefeuille,
+      // c'est l'événement `confirm` de l'Express Checkout Element qui porte le
+      // moyen de paiement déjà complet.
+      const result = await ancillaryActions.confirm(
+        expressCheckoutConfirmEvent
+          ? { expressCheckoutConfirmEvent, redirect: 'if_required' }
+          : { redirect: 'if_required' }
+      );
 
-      if (error) {
-        VELVET.banner(banner, error.message || 'Le paiement n’a pas abouti.', 'error');
+      if (result.type === 'error') {
+        // La session reste ouverte : ni l'instance Checkout ni le formulaire
+        // ne sont recréés, Camille corrige et retente sur place.
+        VELVET.banner(banner, result.error.message || 'Le paiement n’a pas abouti.', 'error');
         setStatus('');
         ancillarySubmit.disabled = false;
         ancillarySubmitting = false;
         return;
       }
 
-      if (paymentIntent && paymentIntent.status === 'succeeded') {
+      const confirmed = ancillaryActions.getSession();
+      if (confirmed.status.type === 'complete') {
         setStatus('Paiement autorisé…', true);
-        const params = new URLSearchParams({
-          payment_intent: paymentIntent.id,
-          payment_intent_client_secret: paymentIntent.client_secret || '',
-        });
+        const params = new URLSearchParams({ checkout_session: ancillaryOrder.checkoutSessionId });
         return void (location.href = `/confirmation?${params}`);
       }
 
-      setStatus(`Statut : ${paymentIntent ? paymentIntent.status : 'inconnu'}`, false);
+      setStatus(`Statut : ${confirmed.status.type}`, false);
       ancillarySubmit.disabled = false;
       ancillarySubmitting = false;
     }
@@ -232,23 +243,27 @@
       btn.disabled = true;
       setStatus('Préparation du paiement…', true);
       try {
-        ancillarySession = await VELVET.post('/api/espace/charge', { ancillary: btn.dataset.ancillary, pnr: selectedPnr });
-        ancillarySummary.textContent = `${ancillarySession.label} — ${VELVET.money(ancillarySession.amount)}, dossier ${ancillarySession.pnr}`;
-        ancillarySubmitLabel.textContent = `Payer ${VELVET.money(ancillarySession.amount)}`;
+        ancillaryOrder = await VELVET.post('/api/espace/charge', { ancillary: btn.dataset.ancillary, pnr: selectedPnr });
+        ancillarySummary.textContent = `${ancillaryOrder.label} — ${VELVET.money(ancillaryOrder.amount)}, dossier ${ancillaryOrder.pnr}`;
 
-        ancillaryElements = stripe.elements({
-          clientSecret: ancillarySession.clientSecret,
-          customerSessionClientSecret: ancillarySession.customerSessionClientSecret,
-          appearance: VELVET.appearance,
-          fonts: await VELVET.fonts(),
-          loader: 'auto',
+        // La session Checkout porte le montant et le client : son client_secret
+        // remplace à la fois `stripe.elements({clientSecret})` et la
+        // CustomerSession qui servait à réafficher la carte enregistrée.
+        ancillaryCheckout = stripe.initCheckoutElementsSdk({
+          clientSecret: ancillaryOrder.clientSecret,
+          elementsOptions: {
+            appearance: VELVET.appearance,
+            fonts: await VELVET.fonts(),
+            loader: 'auto',
+            savedPaymentMethod: { enableRedisplay: 'auto', enableSave: 'never' },
+          },
         });
         // Boutons en un clic — Apple Pay, Google Pay, Link, PayPal — montés
-        // sur la même instance elements que le Payment Element : un seul
-        // PaymentIntent, deux manières de le régler. Le bloc reste masqué
+        // sur la même instance Checkout que le Payment Element : une seule
+        // session, deux manières de la régler. Le bloc reste masqué
         // jusqu'à ce que Stripe annonce au moins un portefeuille disponible
         // sur l'appareil de Camille, pour ne pas laisser un vide dans la carte.
-        const expressElement = ancillaryElements.create('expressCheckout', {
+        const expressElement = ancillaryCheckout.createExpressCheckoutElement({
           buttonHeight: 48,
           buttonType: { applePay: 'buy', googlePay: 'buy', paypal: 'buynow', klarna: 'pay' },
           paymentMethodOrder: ['apple_pay', 'google_pay', 'link', 'paypal'],
@@ -257,16 +272,18 @@
           layout: { maxColumns: 1, maxRows: 0, overflow: 'never' },
         });
         expressElement.mount('#ancillary-express-element');
+        ancillaryMounted.push(expressElement);
 
         expressElement.on('availablepaymentmethodschange', ({ paymentMethods }) => {
           ancillaryExpress.hidden = !paymentMethods;
         });
 
         // La feuille du portefeuille rend un moyen de paiement déjà complet :
-        // il n'y a rien à saisir, on confirme directement l'intention.
-        expressElement.on('confirm', async () => {
+        // il n'y a rien à saisir, on passe l'événement à `confirm` qui règle
+        // la session sans repasser par le formulaire carte.
+        expressElement.on('confirm', async (event) => {
           if (!beginConfirmation()) return;
-          await confirmAncillary();
+          await confirmAncillary(event);
         });
 
         // Fermeture de la feuille du portefeuille sans payer : on revient à
@@ -286,19 +303,34 @@
           );
         });
 
-        const paymentElement = ancillaryElements.create('payment', {
-          layout: { type: 'accordion', defaultCollapsed: false, radios: true, spacedAccordionItems: false },
+        const paymentElement = ancillaryCheckout.createPaymentElement({
+          layout: { type: 'accordion', radios: 'always', spacedAccordionItems: false },
           terms: { card: 'never' },
           wallets: { applePay: 'auto', googlePay: 'auto' },
         });
         paymentElement.mount('#ancillary-payment-element');
-        paymentElement.on('ready', () => {
-          ancillarySubmit.disabled = false;
-          setStatus('');
-        });
+        ancillaryMounted.push(paymentElement);
         paymentElement.on('loaderror', (err) => {
           VELVET.banner(banner, `Formulaire indisponible : ${err.error && err.error.message}`, 'error');
         });
+
+        const loaded = await ancillaryCheckout.loadActions();
+        if (loaded.type === 'error') throw new Error(loaded.error.message);
+        ancillaryActions = loaded.actions;
+
+        // Le montant du bouton est lu sur la session, pas recalculé ici : c'est
+        // ce que `confirm` exige, et c'est `canConfirm` qui remplace
+        // l'événement « ready » pour activer le bouton.
+        function renderAncillaryTotal(checkoutSession) {
+          ancillarySubmitLabel.textContent = `Payer ${checkoutSession.total.total.amount}`;
+          ancillarySubmit.disabled = ancillarySubmitting || !checkoutSession.canConfirm;
+        }
+        renderAncillaryTotal(ancillaryActions.getSession());
+        ancillaryCheckout.on('change', (updated) => {
+          renderAncillaryTotal(updated);
+          if (updated.canConfirm && !ancillarySubmitting) setStatus('');
+        });
+        setStatus('');
 
         ancillaryButtons.hidden = true;
         ancillaryForm.hidden = false;

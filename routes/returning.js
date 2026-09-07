@@ -3,7 +3,7 @@ const express = require('express');
 const stripe = require('../lib/stripe');
 const { buildMetadata } = require('../lib/metadata');
 const store = require('../lib/store');
-const { findOrCreateCustomer, createCustomerSession } = require('./booking');
+const { findOrCreateCustomer, createCheckoutSession } = require('./booking');
 const { BOOKING, ANCILLARIES, ORIGIN } = require('../config');
 
 const router = express.Router();
@@ -63,9 +63,9 @@ router.get('/espace', async (req, res, next) => {
 });
 
 // POST /api/espace/charge — prestation complémentaire réglée depuis l'espace
-// voyageur, sans quitter la page : un PaymentIntent et une CustomerSession
-// sont créés comme pour la réservation initiale (routes/booking.js), et
-// paiement se fait via un Payment Element monté directement dans l'espace.
+// voyageur, sans quitter la page : une session Checkout est créée comme pour la
+// réservation initiale (routes/booking.js), et le paiement se fait via un
+// Payment Element monté directement dans l'espace.
 router.post('/espace/charge', async (req, res, next) => {
   try {
     const key = req.body && req.body.ancillary;
@@ -96,15 +96,15 @@ router.post('/espace/charge', async (req, res, next) => {
       if (ticket) parent = ticket.id;
     }
 
-    const paymentIntent = await stripe.paymentIntents.create({
+    // Même fabrique de session que pour la réservation : c'est le `customer`
+    // porté par la session qui fait réafficher la carte enregistrée de Camille
+    // pour un paiement en un geste.
+    const session = await createCheckoutSession({
+      customerId: customer.id,
       amount: ancillary.amount,
-      currency: BOOKING.currency,
-      customer: customer.id,
-      automatic_payment_methods: { enabled: true },
-      payment_method_options: { card: { setup_future_usage: 'off_session' } },
-      statement_descriptor_suffix: 'VELVET SERVICE',
+      productName: `Velvet — ${ancillary.label}`,
       description: `Velvet — ${ancillary.label} — ${pnr}`,
-      receipt_email: BOOKING.passenger.email,
+      statementSuffix: 'VELVET SERVICE',
       metadata: buildMetadata({
         booking_reference: pnr,
         ancillary_type: ancillary.key,
@@ -113,18 +113,13 @@ router.post('/espace/charge', async (req, res, next) => {
       }),
     });
 
-    // Même CustomerSession que pour la réservation : elle fait réafficher la
-    // carte enregistrée de Camille pour un paiement en un geste.
-    const customerSession = await createCustomerSession(customer.id);
-
     res.json({
-      clientSecret: paymentIntent.client_secret,
-      customerSessionClientSecret: customerSession.client_secret,
-      paymentIntentId: paymentIntent.id,
+      clientSecret: session.client_secret,
+      checkoutSessionId: session.id,
       pnr,
       label: ancillary.label,
       amount: ancillary.amount,
-      returnUrl: `${ORIGIN}/confirmation`,
+      returnUrl: `${ORIGIN}/confirmation?checkout_session=${session.id}`,
     });
   } catch (err) {
     next(err);

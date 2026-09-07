@@ -139,9 +139,26 @@
     }
     setStub(booking.pnr);
 
-    // Deux provenances possibles : le Payment Element (payment_intent) ou la
-    // session de paiement à bord (session_id).
+    // Trois provenances possibles : la session Checkout du Payment Element
+    // (checkout_session), le Payment Link à bord (session_id), ou un
+    // payment_intent transmis directement par la console d'exploitation.
     let piId = params.get('payment_intent');
+
+    // La session Checkout ne crée son PaymentIntent qu'à la confirmation :
+    // c'est cette lecture qui le récupère, et qui au passage rattache le
+    // paiement au dossier côté serveur pour rendre l'annulation possible.
+    if (!piId && params.get('checkout_session')) {
+      const cs = await VELVET.get(`/api/checkout/session/${params.get('checkout_session')}`);
+      piId = cs.paymentIntentId;
+      if (cs.metadata && cs.metadata.ancillary_label) {
+        VELVET.el('headline').textContent = `${cs.metadata.ancillary_label} confirmé`;
+        VELVET.el('subline').textContent = 'La prestation est rattachée à votre dossier de réservation.';
+      }
+      if (!piId) {
+        VELVET.banner(banner, `Session ${cs.status} — paiement ${cs.paymentStatus}.`, 'info');
+      }
+    }
+
     if (!piId && params.get('session_id')) {
       const s = await VELVET.get(`/api/bord/session/${params.get('session_id')}`);
       piId = s.paymentIntentId;
