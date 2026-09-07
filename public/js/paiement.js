@@ -29,18 +29,15 @@
     // donc le réglage affiché survit au rechargement.
     const adaptivePricing = params.get('adaptive') === '1';
 
-    // Le panneau est câblé avant la création de la session : si l'API refuse, le
-    // présentateur doit pouvoir rebasculer sans réécrire l'URL à la main.
-    document.querySelectorAll('[data-adaptive]').forEach((btn) => {
-      const wants = btn.dataset.adaptive === '1';
-      btn.classList.toggle('is-active', wants === adaptivePricing);
-      btn.setAttribute('aria-checked', String(wants === adaptivePricing));
-      btn.addEventListener('click', () => {
-        if (wants === adaptivePricing) return;
-        const next = new URLSearchParams({ tripType });
-        if (wants) next.set('adaptive', '1');
-        location.href = `/paiement?${next}`;
-      });
+    // L'interrupteur est câblé avant la création de la session : si l'API refuse,
+    // le présentateur doit pouvoir rebasculer sans réécrire l'URL à la main.
+    const adaptiveToggle = VELVET.el('adaptive-toggle');
+    adaptiveToggle.classList.toggle('is-on', adaptivePricing);
+    adaptiveToggle.setAttribute('aria-checked', String(adaptivePricing));
+    adaptiveToggle.addEventListener('click', () => {
+      const next = new URLSearchParams({ tripType });
+      if (!adaptivePricing) next.set('adaptive', '1');
+      location.href = `/paiement?${next}`;
     });
 
     VELVET.el('from').textContent = booking.origin;
@@ -128,7 +125,6 @@
     // c'est ce que `confirm` exige, et c'est ce qui ferait suivre l'écran sans
     // retouche si une remise ou une conversion de devise s'ajoutait un jour.
     const currencySelector = VELVET.el('currency-selector');
-    const adaptiveState = VELVET.el('adaptive-state');
 
     function renderTotal(checkoutSession) {
       VELVET.el('total').textContent = checkoutSession.total.total.amount;
@@ -142,19 +138,11 @@
       const options = checkoutSession.currencyOptions || [];
       currencySelector.hidden = options.length === 0;
 
-      // Ce que le présentateur doit pouvoir lire à dix mètres : le réglage
-      // renvoyé par l'API, la devise que Velvet encaisse, celle qui est
-      // présentée, et le taux garanti. Aucune valeur n'est recalculée ici —
-      // toutes viennent de la session.
-      const converted = options.find((o) => o.currencyConversion);
-      adaptiveState.innerHTML = [
-        ['adaptive_pricing', session.adaptivePricing ? 'enabled' : 'disabled'],
-        ['devise encaissée', booking.currency.toUpperCase()],
-        ['devise présentée', (checkoutSession.currency || booking.currency).toUpperCase()],
-        ['taux garanti', converted ? converted.currencyConversion.fxRate : '—'],
-      ]
-        .map(([k, v]) => `<dt class="mono">${k}</dt><dd class="mono">${v}</dd>`)
-        .join('');
+      // L'interrupteur reflète ce que l'API a répondu, pas ce qui a été demandé :
+      // si le compte refusait la conversion, il doit retomber en position
+      // « arrêt » au lieu de mentir sur l'état de la session.
+      adaptiveToggle.classList.toggle('is-on', session.adaptivePricing);
+      adaptiveToggle.setAttribute('aria-checked', String(session.adaptivePricing));
     }
     renderTotal(actions.getSession());
 

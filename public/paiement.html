@@ -23,6 +23,16 @@
 <section class="section">
   <div class="wrap">
 
+    <!-- Interrupteur du présentateur, en haut à gauche de l'écran : il n'existe
+         pas sur velvet.fr. Basculer recrée la session Checkout avec ou sans
+         Adaptive Pricing — le réglage se pose à la création, donc l'écran repart
+         d'une session neuve. Pas de `data-reveal` : un interrupteur ne doit pas
+         apparaître en fondu. -->
+    <button type="button" class="switch" id="adaptive-toggle" role="switch" aria-checked="false">
+      <span class="switch__track"><span class="switch__knob"></span></span>
+      <span class="switch__label">Adaptive Pricing</span>
+    </button>
+
     <div class="between between--top" style="margin-bottom:var(--sp-3)">
       <div>
         <p class="eyebrow eyebrow--marked">Étape 2 sur 3</p>
@@ -69,23 +79,6 @@
         <div class="card card--flat" data-reveal>
           <p class="eyebrow eyebrow--marked">Ce dossier suit le paiement</p>
           <dl class="dl dl--left small" id="meta-list"></dl>
-        </div>
-
-        <!-- Panneau de réglage du présentateur : il n'existe pas sur velvet.fr.
-             Il recrée la session Checkout avec ou sans Adaptive Pricing, pour
-             montrer le même trajet présenté en euros puis en livres. Pas de
-             `data-reveal` : un interrupteur ne doit pas apparaître en fondu. -->
-        <div class="card card--flat demo-panel">
-          <p class="eyebrow eyebrow--marked">Réglage de démonstration — hors parcours voyageur</p>
-          <p class="small">
-            Adaptive Pricing se règle à la création de la session Checkout&nbsp;: basculer
-            recharge l’écran sur une session neuve, avec une nouvelle référence de dossier.
-          </p>
-          <div class="grid grid--2" style="gap:var(--sp-2)" role="radiogroup" aria-label="Adaptive Pricing">
-            <button type="button" class="btn btn--toggle is-active" role="radio" aria-checked="true" data-adaptive="0">Prix en euros</button>
-            <button type="button" class="btn btn--toggle" role="radio" aria-checked="false" data-adaptive="1">Adaptive Pricing</button>
-          </div>
-          <dl class="dl dl--left small" id="adaptive-state"></dl>
         </div>
       </div>
 

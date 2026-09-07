@@ -206,7 +206,7 @@ transmis, jamais omis, dans les deux positions de l'interrupteur.
 
 *Le suffixe d'e-mail attend un code pays ISO 3166 alpha-2, et « uk » n'en est pas un.*
 Mesuré : `+location_uk` et `+location_UK` renvoient une session **sans aucune option de
-devise** — donc un écran en euros avec l'interrupteur en position « activé », la panne
+devise** — donc un écran en euros avec l'interrupteur en position « marche », la panne
 silencieuse. `+location_gb` et `+location_GB` donnent tous deux 67,01 £ ; `+location_JP`
 donne 14 019 ¥. La casse est indifférente, le code ne l'est pas. Le client de démonstration
 `cus_VD2KkdA6Bs9Sz8` porte donc `camille.martin+location_gb@example.com` : changer

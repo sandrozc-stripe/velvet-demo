@@ -891,12 +891,54 @@ body.is-loaded .hero__rail .rail__track { animation: draw 1.4s var(--ease) 0.6s 
    carte — public/js/paiement.js masque alors le conteneur. */
 #currency-selector { margin-bottom: var(--sp-3); }
 
-/* Panneau réservé au présentateur. La barre rose sur le bord gauche et la
-   mention en tête suffisent à dire qu'il ne fait pas partie du parcours
-   voyageur : il n'y a rien de tel sur velvet.fr. */
-.demo-panel { border-left: 3px solid var(--c-pink); }
-.demo-panel .small { margin: 0 0 var(--sp-2); }
-.demo-panel #adaptive-state { margin-top: var(--sp-2); }
+/* Interrupteur réservé au présentateur, en haut à gauche de l'écran de
+   paiement. Il n'y a rien de tel sur velvet.fr : le rail rose et le libellé en
+   petites capitales le disent sans une ligne d'explication de plus.
+
+   Angles droits comme le reste du système — le rail est un rectangle, pas une
+   pilule, et le pion est un carré qui glisse d'un bord à l'autre. */
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin: 0 0 var(--sp-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.switch__track {
+  position: relative;
+  width: 2.4rem;
+  height: 1.1rem;
+  flex: none;
+  border: 1px solid var(--c-border-strong);
+  background: transparent;
+  transition: background 0.25s var(--ease), border-color 0.25s var(--ease);
+}
+.switch__knob {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: calc(1.1rem - 4px);
+  height: calc(1.1rem - 4px);
+  background: var(--c-border-strong);
+  transition: transform 0.25s var(--ease), background 0.25s var(--ease);
+}
+.switch__label {
+  font-size: var(--fs-micro);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  transition: opacity 0.25s var(--ease);
+}
+.switch.is-on .switch__track { background: var(--c-pink); border-color: var(--c-pink); }
+.switch.is-on .switch__knob { background: var(--c-green); transform: translateX(1.3rem); }
+.switch.is-on .switch__label { opacity: 1; }
+.switch:focus-visible { outline: 2px solid var(--c-pink); outline-offset: 3px; }
+.switch:hover .switch__label { opacity: 1; }
 
 /* Carte enregistrée réutilisable : rangée native Velvet, pas un iframe. */
 .pm {
