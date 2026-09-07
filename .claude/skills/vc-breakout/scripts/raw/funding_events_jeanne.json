@@ -1,0 +1,12 @@
+[
+  {"domain":"castordoc.com","funding_type":"other","funding_month":1740787200,"funding_amount":0,"announced_date":"2025-03-01","investor_names":"coalesce.io"},
+  {"domain":"castordoc.com","funding_type":"other","funding_month":1738368000,"funding_amount":null,"announced_date":"2025-02-01","investor_names":"coalesce.io"},
+  {"domain":"sairen.io","funding_type":"pre_series_a","funding_month":1730419200,"funding_amount":1087050,"announced_date":"2024-11-01","investor_names":"bpifrance.com"},
+  {"domain":"digitalkin.com","funding_type":"pre_series_a","funding_month":1725148800,"funding_amount":446379,"announced_date":"2024-09-01","investor_names":"mesh-ventures.com | UNKNOWN_INVESTOR | stronghands.fr | bpifrance.com | stard.fr | nikita ventures | parisbusinessangels.com | cci capital croissance"},
+  {"domain":"digitalkin.com","funding_type":"pre_series_a","funding_month":1711929600,"funding_amount":null,"announced_date":"2024-04-01","investor_names":"hub612.com"},
+  {"domain":"digitalkin.com","funding_type":"pre_series_a","funding_month":1696118400,"funding_amount":null,"announced_date":"2023-10-01","investor_names":"nvidia inception"},
+  {"domain":"castordoc.com","funding_type":"series_a","funding_month":1654041600,"funding_amount":23500000,"announced_date":"2022-06-01","investor_names":"blossomcap.com | frst | blossom | frst.vc | florian douetteau"},
+  {"domain":"castordoc.com","funding_type":"pre_series_a","funding_month":1635724800,"funding_amount":2000000,"announced_date":"2021-11-01","investor_names":"edwardlando.com | pareto20.com | eduardo ronzano"},
+  {"domain":"castordoc.com","funding_type":"other","funding_month":1606780800,"funding_amount":null,"announced_date":"2020-12-01","investor_names":"agoranov.com"},
+  {"domain":"castordoc.com","funding_type":"pre_series_a","funding_month":1606780800,"funding_amount":2996716.93,"announced_date":"2020-12-01","investor_names":"frst.vc | pareto20.com | eduardo ronzano | agoranov.com"}
+]

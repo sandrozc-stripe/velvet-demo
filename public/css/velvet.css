@@ -1,0 +1,1327 @@
+/* Velvet — système de design extrait de velvet.fr.
+   Vert #003E40 pour l'encre et les fonds sombres, rose #EFAAFE comme accent
+   unique, turquoise #03C1A1 réservé aux signaux « en direct ». Angles droits,
+   aucune ombre floue : la profondeur vient de cadres décalés au trait.
+
+   L'élément signature est « la ligne » : une ligne de rail, ses jalons carrés
+   et un point rose qui la parcourt. Elle relie tous les écrans — réseau en
+   page d'accueil, étapes du paiement, trajet d'un billet. */
+
+@font-face {
+  font-family: 'Roc Grotesk';
+  src: url('../fonts/RocGroteskBlack.woff2') format('woff2');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Work Sans';
+  src: url('../fonts/WorkSans-VariableFont_wght.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --c-green: #003e40;
+  --c-green-soft: #0a5254;
+  --c-ink: #002527;
+  --c-pink: #efaafe;
+  --c-pink-deep: #f0aaff;
+  --c-teal: #03c1a1;
+  --c-light: #ffffff;
+  --c-beige: #f0ebe1;
+  --c-mist: #ebedf5;
+  --c-border: rgba(0, 62, 64, 0.16);
+  --c-border-strong: rgba(0, 62, 64, 0.4);
+  --c-border-pink: rgba(239, 170, 254, 0.28);
+  --c-error: #d95667;
+  --c-ok: #0b6b52;
+  --c-warn: #b8791f;
+  --radius: 0;
+
+  /* Couleur du fond de la page courante : les découpes du billet s'y fondent. */
+  --page: var(--c-light);
+
+  /* Échelle typographique calibrée pour une projection : rien sous 15px.
+     Le contraste d'échelle est volontairement brutal — Roc Grotesk énorme,
+     Work Sans en petites capitales pour tout le reste. */
+  --fs-mega: clamp(3rem, 8.2vw, 7.5rem);
+  --fs-display: clamp(2.6rem, 5.4vw, 4.75rem);
+  --fs-h1: clamp(2rem, 3.6vw, 3.15rem);
+  --fs-h2: clamp(1.45rem, 2.2vw, 2rem);
+  --fs-h3: 1.15rem;
+  --fs-body: 1.0625rem;
+  --fs-small: 0.9375rem;
+  --fs-micro: 0.8125rem;
+
+  --sp-1: 0.5rem;
+  --sp-2: 1rem;
+  --sp-3: 1.5rem;
+  --sp-4: 2.5rem;
+  --sp-5: 4rem;
+  --sp-6: 6.5rem;
+
+  --max: 1180px;
+  --nav-h: 74px;
+  --mono: 'SFMono-Regular', 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: var(--fs-body);
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--c-green);
+  background: var(--c-light);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+.display,
+.mega {
+  font-family: 'Roc Grotesk', 'Work Sans', sans-serif;
+  font-weight: 800;
+  line-height: 0.94;
+  text-transform: uppercase;
+  letter-spacing: -0.005em;
+  margin: 0 0 var(--sp-2);
+  font-variant-numeric: tabular-nums;
+}
+
+h1 { font-size: var(--fs-h1); }
+h2 { font-size: var(--fs-h2); }
+h3 { font-size: var(--fs-h3); letter-spacing: 0.01em; }
+
+.display { font-size: var(--fs-display); }
+.mega { font-size: var(--fs-mega); line-height: 0.86; margin: 0; }
+
+p { margin: 0 0 var(--sp-2); }
+p:last-child { margin-bottom: 0; }
+a { color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 3px;
+}
+.section--green :focus-visible,
+.card--green :focus-visible,
+.topbar :focus-visible,
+.footer :focus-visible {
+  outline-color: var(--c-pink);
+}
+
+::selection {
+  background: var(--c-pink);
+  color: var(--c-green);
+}
+
+/* ---------- structure ---------- */
+
+.wrap {
+  width: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 var(--sp-3);
+}
+
+.wrap--wide { max-width: 1560px; }
+
+.section { padding: var(--sp-5) 0; position: relative; }
+.section--tight { padding: var(--sp-3) 0; }
+.section--green { background: var(--c-green); color: var(--c-light); --page: var(--c-green); }
+.section--ink { background: var(--c-ink); color: var(--c-light); --page: var(--c-ink); }
+.section--beige { background: var(--c-beige); --page: var(--c-beige); }
+.section--pink { background: var(--c-pink); color: var(--c-green); --page: var(--c-pink); }
+
+.section--green h1,
+.section--green h2,
+.section--ink h1,
+.section--ink h2 { color: var(--c-pink); }
+
+/* Filet rose entre deux surfaces sombres et claires : la couture est nette. */
+.section--green + .section,
+.section--ink + .section { border-top: 1px solid transparent; }
+
+/* ---------- barre de navigation ---------- */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--c-green);
+  color: var(--c-light);
+  border-bottom: 1px solid var(--c-border-pink);
+}
+
+.topbar__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--nav-h);
+}
+
+.topbar__logo {
+  display: block;
+  height: 26px;
+  width: auto;
+  transition: transform 0.4s var(--ease);
+}
+a:hover > .topbar__logo { transform: translateY(-2px); }
+
+.topbar__nav {
+  display: flex;
+  gap: var(--sp-1);
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.topbar__nav a {
+  position: relative;
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  padding: 0.55rem 0.75rem;
+  color: rgba(255, 255, 255, 0.82);
+  transition: color 0.25s ease;
+}
+
+/* Le survol trace la même ligne que le rail : soulignement qui se déploie. */
+.topbar__nav a::after {
+  content: '';
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.3rem;
+  height: 2px;
+  background: var(--c-pink);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s var(--ease);
+}
+.topbar__nav a:hover { color: #fff; }
+.topbar__nav a:hover::after { transform: scaleX(1); }
+.topbar__nav a[aria-current='page'] { color: var(--c-pink); }
+.topbar__nav a[aria-current='page']::after { transform: scaleX(1); }
+
+/* ---------- pied de page ---------- */
+
+.footer {
+  background: var(--c-ink);
+  color: rgba(255, 255, 255, 0.7);
+  padding: var(--sp-4) 0;
+  font-size: var(--fs-micro);
+}
+.footer__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.footer img { height: 20px; opacity: 0.9; }
+.footer__net {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+}
+
+/* ---------- boutons ---------- */
+
+.btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  font-family: 'Work Sans', sans-serif;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  padding: 1rem 1.9rem;
+  border: 1px solid var(--c-green);
+  border-radius: var(--radius);
+  background: var(--c-pink);
+  color: var(--c-green);
+  cursor: pointer;
+  transition: color 0.3s ease, border-color 0.3s ease, transform 0.3s var(--ease);
+}
+
+/* Le survol est un balayage : la couleur traverse le bouton comme une rame. */
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--c-green);
+  transform: translateX(-101%);
+  transition: transform 0.45s var(--ease);
+}
+.btn:hover:not(:disabled)::before,
+.btn:focus-visible:not(:disabled)::before { transform: translateX(0); }
+.btn:hover:not(:disabled),
+.btn:focus-visible:not(:disabled) { color: var(--c-pink); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn--block { width: 100%; }
+
+.btn--green { background: var(--c-green); color: var(--c-pink); border-color: var(--c-green); }
+.btn--green::before { background: var(--c-pink); }
+.btn--green:hover:not(:disabled),
+.btn--green:focus-visible:not(:disabled) { color: var(--c-green); }
+
+.btn--ghost { background: transparent; color: inherit; border-color: currentColor; }
+.btn--ghost::before { background: var(--c-pink); }
+.btn--ghost:hover:not(:disabled),
+.btn--ghost:focus-visible:not(:disabled) { color: var(--c-green); border-color: var(--c-pink); }
+
+.btn--small { padding: 0.6rem 1.05rem; font-size: var(--fs-micro); letter-spacing: 0.08em; }
+
+.btn--toggle {
+  background: transparent;
+  color: inherit;
+  border-color: currentColor;
+  opacity: 0.55;
+  padding: 0.75rem 1rem;
+  font-size: var(--fs-micro);
+}
+.btn--toggle::before { background: var(--c-pink); }
+.btn--toggle.is-active {
+  background: var(--c-pink);
+  color: var(--c-green);
+  border-color: var(--c-pink);
+  opacity: 1;
+}
+.btn--toggle.is-active::before { transform: translateX(0); background: var(--c-pink); }
+.btn--toggle.is-active:hover { color: var(--c-green); }
+
+/* Flèche qui avance au survol : même grammaire que le point du rail. */
+.btn__arrow { transition: transform 0.4s var(--ease); }
+.btn:hover .btn__arrow { transform: translateX(4px); }
+
+/* ---------- cartes et grilles ---------- */
+
+.card {
+  position: relative;
+  background: var(--c-light);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: var(--sp-3);
+}
+
+.card--flat { border: none; background: var(--c-beige); }
+.card--green {
+  background: var(--c-green);
+  color: var(--c-light);
+  border-color: var(--c-green);
+  --page: var(--c-green);
+}
+.card--green { border-color: var(--c-border-pink); }
+.card--ink { background: var(--c-ink); color: var(--c-light); border-color: var(--c-border-pink); --page: var(--c-ink); }
+.card--green .eyebrow,
+.card--ink .eyebrow { color: var(--c-pink); opacity: 1; }
+.card--ink .rows,
+.card--ink .rows > div { border-color: var(--c-border-pink); }
+
+/* Profondeur sans ombre : deux filets roses décalés le long des bords droit
+   et bas, comme un cadre qui aurait glissé. Rien ne traverse la carte. */
+.card--frame::after,
+.card--selectable::after,
+.card--on::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 0 solid var(--c-pink);
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+  pointer-events: none;
+  border-radius: inherit;
+  transition: transform 0.35s var(--ease), opacity 0.35s ease;
+}
+.card--frame::after { transform: translate(10px, 10px); }
+
+.card--selectable { cursor: pointer; transition: transform 0.35s var(--ease), border-color 0.35s ease; }
+.card--selectable::after { opacity: 0; }
+.card--selectable:hover { transform: translate(-3px, -3px); border-color: var(--c-border-strong); }
+.card--selectable:hover::after { transform: translate(8px, 8px); opacity: 1; }
+
+/* Dossier courant : barre rose plein bord, lisible à dix mètres. */
+.card--on {
+  border-color: var(--c-green);
+  transform: translate(-3px, -3px);
+}
+.card--on::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: -1px;
+  bottom: -1px;
+  width: 5px;
+  background: var(--c-pink);
+}
+.card--on::after { transform: translate(8px, 8px); opacity: 1; }
+
+.grid { display: grid; gap: var(--sp-3); }
+.grid--2 { grid-template-columns: 1fr 1fr; }
+.grid--3 { grid-template-columns: repeat(3, 1fr); }
+.grid--sidebar { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); }
+
+@media (max-width: 900px) {
+  .grid--2,
+  .grid--3,
+  .grid--sidebar { grid-template-columns: 1fr; }
+}
+
+/* ---------- étiquettes et libellés ---------- */
+
+.eyebrow {
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 600;
+  opacity: 0.65;
+  margin: 0 0 var(--sp-1);
+}
+
+/* Un filet rose devant l'exergue : marque de section, pas décoration. */
+.eyebrow--marked {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  opacity: 1;
+}
+.eyebrow--marked::before {
+  content: '';
+  width: 22px;
+  height: 2px;
+  background: var(--c-pink);
+  flex: none;
+}
+
+.tag {
+  display: inline-block;
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--c-border);
+  background: var(--c-mist);
+}
+
+.tag--pink { background: var(--c-pink); border-color: var(--c-pink); }
+.tag--green { background: var(--c-green); color: var(--c-pink); border-color: var(--c-green); }
+.tag--ok { background: #e2f7f1; border-color: #a9e4d6; color: #05564a; }
+.tag--warn { background: #fdf1dc; border-color: #f0d6a4; color: #7d5310; }
+.tag--alert { background: #fbe2e5; border-color: #f0bcc3; color: #8c2531; }
+
+.mono {
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Point turquoise qui bat : « cet écran est en direct ». */
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+.live::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: var(--c-teal);
+  animation: pulse 1.8s var(--ease-inout) infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.7); }
+}
+
+/* ---------- le PNR, fil rouge de la démonstration ---------- */
+
+.pnr {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  background: var(--c-pink);
+  color: var(--c-green);
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--c-green);
+}
+
+.pnr::before {
+  content: 'dossier';
+  font-family: 'Work Sans', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.pnr--inverse { background: var(--c-green); color: var(--c-pink); border-color: var(--c-pink); }
+
+/* ---------- la ligne : élément signature ---------- */
+
+.rail {
+  --rail-color: var(--c-border-pink);
+  position: relative;
+  padding-top: 1.1rem;
+}
+
+.rail__track {
+  position: relative;
+  height: 1px;
+  background: var(--rail-color);
+  overflow: visible;
+}
+
+/* Le point qui parcourt la ligne, avec sa traîne. */
+.rail__node {
+  position: absolute;
+  top: -3px;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  background: var(--c-pink);
+  animation: glide 9s var(--ease-inout) infinite;
+}
+.rail__node::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 3px;
+  width: 90px;
+  height: 1px;
+  background: var(--c-pink);
+  opacity: 0.45;
+}
+@keyframes glide {
+  0% { left: 0; opacity: 0; }
+  6% { opacity: 1; }
+  94% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+.rail__stops {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rail__stop {
+  position: relative;
+  padding-top: 0.85rem;
+  text-align: center;
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  opacity: 0.72;
+}
+.rail__stop::before {
+  content: '';
+  position: absolute;
+  top: -0.5rem;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  background: currentColor;
+  opacity: 0.5;
+}
+.rail__stop.is-on { opacity: 1; color: var(--c-pink); }
+.rail__stop.is-on::before {
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  top: -0.7rem;
+  opacity: 1;
+}
+
+/* ---------- étapes du parcours (même grammaire que la ligne) ---------- */
+
+.steps {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  list-style: none;
+  margin: 0 0 var(--sp-4);
+  padding: 0;
+  position: relative;
+  counter-reset: step;
+}
+.steps::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--c-border);
+}
+
+.steps__item {
+  position: relative;
+  padding-top: 1.5rem;
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  opacity: 0.5;
+}
+.steps__item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--c-green);
+  background: var(--c-light);
+}
+.steps__item.is-done { opacity: 0.85; }
+.steps__item.is-done::before { background: var(--c-green); }
+.steps__item.is-on { opacity: 1; }
+.steps__item.is-on::before { background: var(--c-pink); border-color: var(--c-green); }
+.steps__item.is-on::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 21px;
+  height: 21px;
+  border: 1px solid var(--c-pink);
+  animation: halo 2.4s var(--ease-inout) infinite;
+}
+@keyframes halo {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.25; transform: scale(1.25); }
+}
+
+/* ---------- accueil : la thèse ---------- */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--c-green);
+  color: var(--c-light);
+  padding: var(--sp-6) 0 var(--sp-5);
+  --page: var(--c-green);
+}
+
+/* Le réseau Velvet, en filigrane rose, débordant du cadre à droite. */
+.hero__map {
+  position: absolute;
+  top: -8%;
+  right: -14%;
+  width: min(62vw, 780px);
+  aspect-ratio: 900 / 876;
+  background: var(--c-pink);
+  -webkit-mask: url('../img/map_lines.svg') no-repeat center / contain;
+  mask: url('../img/map_lines.svg') no-repeat center / contain;
+  opacity: 0.13;
+  pointer-events: none;
+  animation: drift 24s ease-in-out infinite alternate;
+}
+@keyframes drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-14px, 10px, 0) scale(1.035); }
+}
+
+.hero__inner { position: relative; }
+.hero .mega { color: var(--c-pink); max-width: 22ch; }
+
+/* Chaque ligne du titre monte derrière son propre masque. */
+.reveal-line { display: block; overflow: hidden; }
+.reveal-line > span {
+  display: block;
+  transform: translateY(105%);
+  transition: transform 1s var(--ease);
+}
+.reveal-line:nth-child(2) > span { transition-delay: 0.09s; }
+.reveal-line:nth-child(3) > span { transition-delay: 0.18s; }
+body.is-loaded .reveal-line > span { transform: translateY(0); }
+
+.hero__lede {
+  max-width: 46ch;
+  font-size: 1.15rem;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.9s var(--ease) 0.42s, transform 0.9s var(--ease) 0.42s;
+}
+body.is-loaded .hero__lede { opacity: 0.92; transform: none; }
+
+.hero__rail {
+  position: relative;
+  margin-top: var(--sp-5);
+  opacity: 0;
+  transition: opacity 0.8s ease 0.6s;
+}
+body.is-loaded .hero__rail { opacity: 1; }
+body.is-loaded .hero__rail .rail__track { animation: draw 1.4s var(--ease) 0.6s both; }
+@keyframes draw {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.hero__rail .rail__track { transform-origin: left; }
+
+/* ---------- listes de définitions ---------- */
+
+.dl { display: grid; grid-template-columns: auto 1fr; gap: 0.55rem var(--sp-2); margin: 0; }
+.dl dt { font-size: var(--fs-small); opacity: 0.65; }
+.dl dd { margin: 0; font-weight: 500; text-align: right; }
+/* Les données machine se lisent en colonne alignée à gauche, pas en facture. */
+.dl--left dd { text-align: left; }
+
+.rows { border-top: 1px solid var(--c-border); }
+.rows > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--c-border);
+}
+.rows span { opacity: 0.75; }
+.rows strong { font-weight: 600; }
+.card--green .rows,
+.card--green .rows > div { border-color: var(--c-border-pink); }
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding-top: var(--sp-2);
+  font-family: 'Roc Grotesk', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 1.75rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.card--green .total > :last-child,
+.card--ink .total > :last-child { color: var(--c-pink); }
+
+/* ---------- alertes ---------- */
+
+.alert {
+  position: relative;
+  border: 1px solid var(--c-error);
+  background: #fdf0f2;
+  color: #7a2029;
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) 1.4rem;
+  font-size: var(--fs-small);
+  animation: alert-in 0.45s var(--ease) both;
+}
+.alert::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: var(--c-error);
+}
+@keyframes alert-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.alert--ok { border-color: var(--c-teal); background: #e4f8f3; color: #05564a; }
+.alert--ok::before { background: var(--c-teal); }
+.alert--info { border-color: var(--c-green); background: var(--c-mist); color: var(--c-green); }
+.alert--info::before { background: var(--c-pink); }
+.alert[hidden] { display: none; }
+/* Une alerte affichée ne doit pas coller à la frise d'étapes qui la suit. */
+.alert:not([hidden]) + .steps { margin-top: var(--sp-3); }
+
+/* ---------- écran de paiement ---------- */
+
+.pay-shell { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: var(--sp-4); align-items: start; }
+@media (max-width: 980px) { .pay-shell { grid-template-columns: 1fr; } }
+
+/* align-self: start est indispensable — un bloc de grille étiré ne colle pas. */
+.summary { position: sticky; top: calc(var(--nav-h) + var(--sp-2)); align-self: start; }
+
+.trip {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+}
+/* L'arrivée se lit à droite de la ligne, le départ à gauche ; les deux gares
+   se partagent la largeur pour que la ligne garde sa place au milieu. */
+.trip > div:not(.trip__line) { flex: 0 1 auto; min-width: 0; }
+.trip > div:last-of-type { text-align: right; }
+.trip__station {
+  font-family: 'Roc Grotesk', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 1.15rem;
+  line-height: 1.02;
+}
+.trip__time {
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+  margin-top: 0.2rem;
+}
+.trip__line { flex: 1 1 auto; min-width: 48px; height: 1px; background: currentColor; opacity: 0.3; position: relative; }
+.trip__line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -2px;
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+}
+.trip__line::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  background: var(--c-pink);
+  animation: glide 7s var(--ease-inout) infinite;
+}
+
+/* En colonne latérale, le trajet se lit de haut en bas : les noms de gare
+   longs restent entiers et le point descend le long de la ligne. */
+.trip--stack { flex-direction: column; align-items: stretch; gap: 0.55rem; }
+.trip--stack > div { flex: 0 0 auto; }
+.trip--stack > div:last-of-type { text-align: left; }
+.trip--stack .trip__line {
+  width: 1px;
+  min-width: 0;
+  height: 34px;
+  flex: none;
+  margin-left: 3px;
+}
+.trip--stack .trip__line::before { top: 0; left: -2px; background: var(--c-pink); }
+.trip--stack .trip__line::after {
+  left: -3px;
+  top: 0;
+  animation: glide-v 7s var(--ease-inout) infinite;
+}
+@keyframes glide-v {
+  0% { top: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+.trip--stack .trip__station { font-size: 1.2rem; }
+
+/* Le Payment Element vit dans le même cadre que le reste de la page. */
+#payment-element { min-height: 260px; margin-bottom: var(--sp-3); }
+
+/* Bandeau de réassurance : trois faits, pas un discours. */
+.trust {
+  display: flex;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-top: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--c-border);
+}
+.trust > span {
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.trust > span::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  background: var(--c-pink);
+}
+
+/* Carte enregistrée réutilisable : rangée native Velvet, pas un iframe. */
+.pm {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+  border: 1px solid var(--c-border);
+  cursor: pointer;
+  margin-bottom: var(--sp-2);
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+.pm:hover { border-color: var(--c-border-strong); }
+.pm--on { border-color: var(--c-green); box-shadow: inset 0 0 0 1px var(--c-green); }
+.pm__body { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; }
+.pm input[type='radio'] { accent-color: var(--c-green); width: 18px; height: 18px; }
+.card--green .pm { border-color: var(--c-border-pink); cursor: default; }
+
+.pay-status {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: var(--fs-small);
+  min-height: 1.6rem;
+  margin-top: var(--sp-2);
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+  flex: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- le billet : moment de la confirmation ---------- */
+
+.ticket {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 116px;
+  background: var(--c-light);
+  border: 1px solid var(--c-green);
+  border-radius: 12px 0 12px 12px;
+  animation: ticket-in 0.9s var(--ease) both;
+}
+@keyframes ticket-in {
+  from { opacity: 0; transform: translateY(26px) rotate(-0.6deg); }
+  to { opacity: 1; transform: none; }
+}
+
+.ticket__main { padding: var(--sp-3); }
+/* Dans la largeur du billet, les gares tiennent sur deux lignes et la ligne
+   garde assez de place pour que le point voyage. */
+.ticket .trip { padding-top: 0; }
+.ticket .trip__station { font-size: 1.1rem; }
+.ticket .trip__line { min-width: 40px; }
+
+/* Le talon : perforation en pointillé et découpes qui laissent voir le fond. */
+.ticket__stub {
+  position: relative;
+  border-left: 1px dashed var(--c-border-strong);
+  display: grid;
+  place-items: center;
+  padding: var(--sp-2) 0;
+}
+.ticket__notch {
+  position: absolute;
+  left: -11px;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: var(--page);
+  border: 1px solid var(--c-green);
+}
+.ticket__notch--top { top: -11px; }
+.ticket__notch--bottom { bottom: -11px; }
+/* On masque la moitié du cercle qui mord dans le billet. */
+.ticket__notch--top { clip-path: inset(50% 0 0 0); border-top-color: transparent; }
+.ticket__notch--bottom { clip-path: inset(0 0 50% 0); border-bottom-color: transparent; }
+
+.ticket__stub-text {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Le tampon : la seule rotation de tout le système, réservée à ce moment. */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Roc Grotesk', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  color: var(--c-pink);
+  border: 2px solid var(--c-pink);
+  padding: 0.35rem 0.8rem;
+  transform: rotate(-6deg);
+  animation: stamp-press 0.55s cubic-bezier(0.2, 1.6, 0.4, 1) 0.35s both;
+}
+@keyframes stamp-press {
+  from { opacity: 0; transform: rotate(-6deg) scale(2.1); }
+  60% { opacity: 1; }
+  to { opacity: 1; transform: rotate(-6deg) scale(1); }
+}
+
+/* ---------- écran à bord ---------- */
+
+.qr-stage { display: grid; place-items: center; gap: var(--sp-2); }
+
+/* Équerres roses aux quatre coins : le cadre de visée du terminal. */
+.qr-frame {
+  position: relative;
+  background: var(--c-light);
+  padding: var(--sp-3);
+  line-height: 0;
+  animation: qr-in 0.6s var(--ease) both;
+}
+@keyframes qr-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+.qr-frame::before,
+.qr-frame::after {
+  content: '';
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--c-pink);
+}
+.qr-frame::before { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+.qr-frame::after { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+/* Le code tient toujours dans l'écran du terminal, quelle qu'en soit la taille. */
+.qr-frame svg { width: min(46vh, 380px, 74vw); height: auto; display: block; }
+
+.amount-hero {
+  font-family: 'Roc Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.6rem, 5vw, 4rem);
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-pink);
+  margin: 0;
+}
+
+/* Terminal du chef de bord : la page entière est un écran d'appareil. */
+body.terminal { background: var(--c-ink); }
+
+/* ---------- sélecteur de dossier (liste déroulante maison) ----------
+   Une liste native ne sait afficher ni le PNR en machine ni le trajet en
+   Roc Grotesk : on redessine le déroulé, au clavier comme à la souris. */
+
+.picker { position: relative; }
+
+.picker__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: 0.9rem 1rem;
+  background: transparent;
+  border: 1px solid var(--c-border-pink);
+  border-radius: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.25s ease, background-color 0.25s ease;
+}
+.picker__trigger:hover,
+.picker.is-open .picker__trigger { border-color: var(--c-pink); }
+.picker.is-open .picker__trigger { background: rgba(239, 170, 254, 0.06); }
+
+.picker__value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem var(--sp-2);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.picker__pnr {
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  color: var(--c-pink);
+}
+.picker__route {
+  font-family: 'Roc Grotesk', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+.picker__meta {
+  font-family: var(--mono);
+  font-size: var(--fs-micro);
+  opacity: 0.6;
+}
+
+/* Chevron : deux filets, jamais un caractère. */
+.picker__chevron {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid var(--c-pink);
+  border-bottom: 2px solid var(--c-pink);
+  transform: translateY(-3px) rotate(45deg);
+  transition: transform 0.3s var(--ease);
+}
+.picker.is-open .picker__chevron { transform: translateY(2px) rotate(-135deg); }
+
+.picker__panel {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 46vh;
+  overflow-y: auto;
+  background: var(--c-ink);
+  border: 1px solid var(--c-pink);
+  animation: picker-in 0.22s var(--ease) both;
+}
+@keyframes picker-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+.picker__panel[hidden] { display: none; }
+
+.picker__option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.3rem var(--sp-2);
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(239, 170, 254, 0.16);
+  transition: background-color 0.2s ease;
+}
+.picker__option:last-child { border-bottom: 0; }
+/* Dans le déroulé : le dossier et l'horaire sur la même ligne, le trajet
+   dessous, quelle que soit l'ordre du balisage. */
+.picker__option .picker__pnr { grid-area: 1 / 1; }
+.picker__option .picker__meta { grid-area: 1 / 2; text-align: right; }
+.picker__option .picker__route { grid-area: 2 / 1 / 3 / -1; }
+.picker__option.is-active,
+.picker__option:hover { background: rgba(239, 170, 254, 0.12); }
+/* Dossier courant : le même filet rose plein bord que dans l'espace voyageur. */
+.picker__option[aria-selected='true'] { box-shadow: inset 4px 0 0 var(--c-pink); }
+.picker__empty { padding: 0.9rem 1rem; opacity: 0.6; font-size: var(--fs-small); }
+
+.qr-placeholder {
+  display: grid;
+  place-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-height: 320px;
+  padding: var(--sp-4);
+  border: 1px dashed var(--c-border-pink);
+  text-align: center;
+}
+.qr-placeholder h3 { color: var(--c-pink); margin-bottom: 0; }
+
+/* Prestation complémentaire : une ligne cliquable, prix à droite. */
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-2);
+  border: 1px solid var(--c-border);
+  background: var(--c-light);
+  color: var(--c-green);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.25s ease, transform 0.3s var(--ease), background 0.25s ease;
+}
+.option:hover:not(:disabled) { border-color: var(--c-green); transform: translateX(3px); }
+.option:disabled { opacity: 0.4; cursor: not-allowed; }
+.option__label { font-weight: 500; flex: 1; }
+.option__price {
+  font-family: var(--mono);
+  font-size: var(--fs-small);
+  font-variant-numeric: tabular-nums;
+}
+.option__arrow { color: var(--c-pink); transition: transform 0.3s var(--ease); }
+.option:hover:not(:disabled) .option__arrow { transform: translateX(4px); }
+
+/* Séparateur entre les boutons en un clic (Express Checkout) et le
+   formulaire carte : un filet, pas une boîte. */
+.or-rule {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(0, 62, 64, 0.6);
+}
+.or-rule::before,
+.or-rule::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--c-border);
+}
+
+/* Montant d'une ligne de réservation : Roc Grotesk, chiffres tabulaires. */
+.amount-row {
+  font-family: 'Roc Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 1.35rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- apparition au défilement ---------- */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(20px);
+}
+body.is-loaded [data-reveal] {
+  transition: opacity 0.75s var(--ease) calc(var(--i, 0) * 80ms),
+    transform 0.75s var(--ease) calc(var(--i, 0) * 80ms);
+}
+[data-reveal].is-in { opacity: 1; transform: none; }
+
+/* ---------- utilitaires ---------- */
+
+.stack > * + * { margin-top: var(--sp-2); }
+.stack-lg > * + * { margin-top: var(--sp-3); }
+.row { display: flex; gap: var(--sp-2); align-items: center; flex-wrap: wrap; }
+.row--end { justify-content: flex-end; }
+.between { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+.between--top { align-items: flex-start; }
+/* Avec flex-wrap, un titre long renvoie la colonne de droite à la ligne :
+   on donne la base zéro au bloc principal et sa taille propre à l'aside. */
+.between__grow { flex: 1 1 0; min-width: 0; }
+.between__aside { flex: none; text-align: right; }
+.muted { opacity: 0.68; }
+.small { font-size: var(--fs-small); }
+.micro { font-size: var(--fs-micro); }
+.center { text-align: center; }
+.nowrap { white-space: nowrap; }
+.pink { color: var(--c-pink); }
+.flush { margin: 0; }
+[hidden] { display: none !important; }
+
+.label {
+  display: block;
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  opacity: 0.65;
+  margin-bottom: 0.4rem;
+}
+
+/* Initiales du voyageur : bloc rose, Roc Grotesk, jamais une photo. */
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  background: var(--c-pink);
+  color: var(--c-green);
+  font-family: 'Roc Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 700px) {
+  :root { --sp-5: 2.75rem; --sp-6: 3.5rem; }
+  .hero__map { opacity: 0.09; right: -30%; }
+  .rail__stop { font-size: 0.6875rem; letter-spacing: 0.04em; }
+  .steps__item { font-size: 0.6875rem; letter-spacing: 0.06em; }
+
+  /* Sur téléphone, les noms de gare ne tiennent pas côte à côte : le trajet
+     se lit de haut en bas, comme dans la colonne latérale. */
+  .trip { flex-direction: column; align-items: stretch; gap: 0.55rem; }
+  .trip > div { flex: 0 0 auto; }
+  .trip > div:last-of-type { text-align: left; }
+  .trip__line,
+  .ticket .trip__line {
+    width: 1px;
+    min-width: 0;
+    height: 34px;
+    flex: none;
+    margin-left: 3px;
+  }
+  .trip__line::before { top: 0; left: -2px; background: var(--c-pink); }
+  .trip__line::after { left: -3px; top: 0; animation-name: glide-v; }
+
+  /* Le talon passe sous le billet : la perforation reste horizontale. */
+  .ticket { grid-template-columns: minmax(0, 1fr); }
+  .ticket__stub {
+    border-left: 0;
+    border-top: 1px dashed var(--c-border-strong);
+    padding: var(--sp-2);
+  }
+  .ticket__notch { display: none; }
+  .ticket__stub-text {
+    writing-mode: horizontal-tb;
+    transform: none;
+    white-space: normal;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  [data-reveal],
+  .reveal-line > span,
+  .hero__lede,
+  .hero__rail { opacity: 1 !important; transform: none !important; }
+}

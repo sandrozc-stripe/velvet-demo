@@ -1,0 +1,61 @@
+[
+  {
+    "account_id": "0015b00002Gqd5dAAB",
+    "country": "United Kingdom",
+    "media_coverage_count_90d": 0,
+    "key_enterprise_customer": true,
+    "senior_geo_hire": true,
+    "quality_headcount_growth": false,
+    "headcount_trend": "flat",
+    "layoffs_announced": false,
+    "no_activity_90d": false,
+    "founder_prior_exit": false,
+    "founder_serial": false,
+    "founder_top_ai_lab": false,
+    "founder_top_tech_company": false,
+    "founder_domain_expert": false,
+    "founder_pedigree_source": "— [no dedicated founder search — Series B, none found opportunistically]",
+    "key_events_this_week": [
+      "Acquired ClaimWise (EU patent workflows) [company blog 2026]",
+      "New offices NYC + Munich, 600+ firms served [company blog 2026]"
+    ]
+  },
+  {
+    "account_id": "001TQ00000XidkDYAR",
+    "country": "United Kingdom",
+    "media_coverage_count_90d": 0,
+    "key_enterprise_customer": false,
+    "senior_geo_hire": false,
+    "quality_headcount_growth": false,
+    "headcount_trend": "flat",
+    "layoffs_announced": false,
+    "no_activity_90d": false,
+    "founder_prior_exit": false,
+    "founder_serial": false,
+    "founder_top_ai_lab": false,
+    "founder_top_tech_company": false,
+    "founder_domain_expert": false,
+    "founder_pedigree_source": "— [no prior-company/exit data found — CEO Meryem Arik, CTO Dr Fergus Finn, CSO Dr Jamie Dborin, co-founders, LinkedIn/Crunchbase]",
+    "key_events_this_week": [
+      "Strategic partnership with ASAS AI for Saudi/Middle East expansion [company site Jun2025]"
+    ]
+  },
+  {
+    "account_id": "0013t00001UmFQhAAN",
+    "country": "United Kingdom",
+    "media_coverage_count_90d": 0,
+    "key_enterprise_customer": false,
+    "senior_geo_hire": false,
+    "quality_headcount_growth": false,
+    "headcount_trend": "flat",
+    "layoffs_announced": false,
+    "no_activity_90d": true,
+    "founder_prior_exit": false,
+    "founder_serial": false,
+    "founder_top_ai_lab": false,
+    "founder_top_tech_company": false,
+    "founder_domain_expert": false,
+    "founder_pedigree_source": null,
+    "key_events_this_week": []
+  }
+]

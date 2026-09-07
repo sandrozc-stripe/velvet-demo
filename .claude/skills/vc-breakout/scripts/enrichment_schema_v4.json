@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["account_id"],
+  "properties": {
+    "account_id": {"type": "string"},
+    "country": {"type": ["string", "null"], "description": "HQ country from web search — only used when Phase 1b (gap query) is degraded and has no decision_country."},
+    "funding_stage": {"type": ["string", "null"], "description": "Normalized: pre_series_a, series_a, series_b, series_c, post_series_c, unknown"},
+    "months_since_round": {"type": ["integer", "null"]},
+    "funding_round_amount_eur": {"type": ["number", "null"]},
+    "funding_round_source": {"type": ["string", "null"], "description": "Telegraphic citation, e.g. 'TechCrunch Jan2026'"},
+    "is_bootstrapped": {"type": "boolean", "default": false},
+    "media_coverage_count_90d": {"type": "integer", "default": 0},
+    "key_enterprise_customer": {"type": "boolean", "default": false},
+    "senior_geo_hire": {"type": "boolean", "default": false},
+    "quality_headcount_growth": {"type": "boolean", "default": false},
+    "headcount_trend": {"type": ["string", "null"], "enum": ["growing", "flat", "shrinking", null]},
+    "layoffs_announced": {"type": "boolean", "default": false},
+    "no_activity_90d": {"type": "boolean", "default": false},
+    "founder_prior_exit": {"type": "boolean", "default": false},
+    "founder_serial": {"type": "boolean", "default": false},
+    "founder_top_ai_lab": {"type": "boolean", "default": false},
+    "founder_top_tech_company": {"type": "boolean", "default": false},
+    "founder_domain_expert": {"type": "boolean", "default": false},
+    "founder_pedigree_source": {"type": ["string", "null"], "description": "Telegraphic evidence, e.g. 'Founder sold PriorCo ~22M 2023 [TechCrunch]'"},
+    "multi_investor_p0": {"type": "boolean", "default": false},
+    "key_events_this_week": {"type": "array", "items": {"type": "string"}, "default": []}
+  },
+  "additionalProperties": false
+}

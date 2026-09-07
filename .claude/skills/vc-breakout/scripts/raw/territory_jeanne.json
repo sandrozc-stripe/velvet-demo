@@ -1,0 +1,5 @@
+{"results": [
+  {"Account Id":"0015b00001uWxzlAAC","Account Name":"Castor","Domain Name":"castordoc.com","Startup Type":null,"Top Startup Type":null,"Employee Count":25,"Is AI Company?":true,"Top 5 VC Funding":"First Funding: 2020-12-01, Last Funding: 2025-03-01"},
+  {"Account Id":"001TQ00000PEoUsYAL","Account Name":"Sairen","Domain Name":"sairen.io","Startup Type":"top","Top Startup Type":"p2","Employee Count":5,"Is AI Company?":true,"Top 5 VC Funding":"First Funding: 2024-11-01, Last Funding: 2024-11-01"},
+  {"Account Id":"001TQ000009hbIhYAI","Account Name":"DigitalKin","Domain Name":"digitalkin.com","Startup Type":"top","Top Startup Type":"p2","Employee Count":16,"Is AI Company?":true,"Top 5 VC Funding":"First Funding: 2023-10-01, Last Funding: 2024-09-19"}
+]}

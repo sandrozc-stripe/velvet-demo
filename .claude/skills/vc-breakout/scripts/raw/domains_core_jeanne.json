@@ -1,0 +1,5 @@
+[
+  {"domain":"digitalkin.com","canonical_name":"DigitalKin","employees__count":15,"funding__total_amount_usd":446379,"funding__last_funding_stage":"pre_series_a","segmentation__company_segment_details__startup_type":"top","segmentation__company_segment_details__top_startup_type":"p2"},
+  {"domain":"sairen.io","canonical_name":"Sairen","employees__count":5,"funding__total_amount_usd":1087050,"funding__last_funding_stage":"pre_series_a","segmentation__company_segment_details__startup_type":"top","segmentation__company_segment_details__top_startup_type":"p2"},
+  {"domain":"castordoc.com","canonical_name":"Catalog","employees__count":100,"funding__total_amount_usd":26299522.92,"funding__last_funding_stage":"other","segmentation__company_segment_details__startup_type":null,"segmentation__company_segment_details__top_startup_type":null}
+]

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Velvet — Régularisation à bord</title>
+<link rel="icon" href="/img/logo-velvet.svg">
+<link rel="stylesheet" href="/css/velvet.css">
+</head>
+<body class="terminal">
+
+<header class="topbar">
+  <div class="wrap wrap--wide topbar__inner">
+    <a href="/"><img class="topbar__logo" src="/img/logo-velvet.svg" alt="Velvet"></a>
+    <nav class="topbar__nav">
+      <a href="/">Réserver</a>
+      <a href="/espace">Mon espace</a>
+      <a href="/bord">À bord</a>
+    </nav>
+  </div>
+</header>
+
+<section class="section section--ink section--tight" style="padding:var(--sp-4) 0">
+  <div class="wrap wrap--wide between between--top">
+    <div>
+      <p class="eyebrow eyebrow--marked" style="opacity:1">Terminal chef de bord</p>
+      <h1>Régularisation à bord</h1>
+    </div>
+    <div class="row" style="gap:var(--sp-3)">
+      <span class="live">En service</span>
+      <span class="mono" id="train">—</span>
+      <span class="pnr pnr--inverse" id="pnr-badge">—</span>
+    </div>
+  </div>
+</section>
+
+<section class="section section--ink" style="padding-top:var(--sp-3)">
+  <div class="wrap wrap--wide stack-lg">
+
+    <div id="banner" class="alert" hidden></div>
+
+    <!-- Le sélecteur de dossier : le chef de bord lit le PNR, le trajet et
+         l'horaire d'un coup d'œil, sans dérouler une liste illisible. -->
+    <div>
+      <span class="label" id="voyage-label">Voyage à régulariser</span>
+      <div class="picker" id="voyage-picker">
+        <button class="picker__trigger" id="voyage-trigger" type="button"
+                role="combobox" aria-haspopup="listbox" aria-expanded="false"
+                aria-controls="voyage-list" aria-labelledby="voyage-label">
+          <span class="picker__value" id="voyage-value">Chargement des dossiers…</span>
+          <span class="picker__chevron" aria-hidden="true"></span>
+        </button>
+        <ul class="picker__panel" id="voyage-list" role="listbox"
+            aria-labelledby="voyage-label" hidden></ul>
+      </div>
+    </div>
+
+    <div class="grid grid--sidebar" style="gap:var(--sp-4)">
+
+      <div class="stack center">
+        <div class="qr-stage">
+          <div id="qr" class="qr-frame" hidden></div>
+          <div id="placeholder" class="qr-placeholder">
+            <h3>Aucune session ouverte</h3>
+            <p class="small muted flush">Générez un code de paiement propre à ce dossier.</p>
+          </div>
+        </div>
+        <button class="btn" id="generate" type="button">Générer le code de paiement</button>
+        <p class="small muted flush" id="hint">
+          Le voyageur scanne le code avec son téléphone et règle sur une page sécurisée.
+        </p>
+      </div>
+
+      <aside class="stack">
+        <div class="card card--green stack">
+          <p class="eyebrow">Complément à percevoir</p>
+          <p class="amount-hero" id="amount">—</p>
+          <p class="small flush" id="label">—</p>
+          <p class="micro muted flush">Trajet non couvert par le titre présenté.</p>
+        </div>
+
+        <div class="card card--green">
+          <p class="eyebrow">Session de paiement</p>
+          <dl class="dl dl--left small mono" id="session-info">
+            <dt>statut</dt><dd id="s-status">—</dd>
+            <dt>lien</dt><dd id="s-id" style="word-break:break-all">—</dd>
+          </dl>
+          <p class="micro muted" style="margin:var(--sp-2) 0 0">
+            Un code par dossier, à usage unique : ce n’est pas un lien de paiement partagé.
+          </p>
+        </div>
+
+        <div class="card card--green">
+          <p class="eyebrow">Encaissement</p>
+          <div id="result" class="small muted">En attente du paiement du voyageur…</div>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap wrap--wide footer__inner">
+    <img src="/img/logo-velvet.svg" alt="Velvet">
+    <span class="footer__net">Paris · Angers · Rennes · Nantes · Bordeaux</span>
+    <span>Démonstration — environnement de test</span>
+  </div>
+</footer>
+
+<script src="/js/common.js"></script>
+<script src="/js/bord.js"></script>
+</body>
+</html>

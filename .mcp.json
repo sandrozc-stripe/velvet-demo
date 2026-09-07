@@ -1,0 +1,30 @@
+{
+  "mcpServers": {
+    "stripe": {
+      "type": "http",
+      "url": "https://mcp.stripe.com/"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
+    },
+    "toolshed_extras": {
+      "type": "stdio",
+      "command": "${TOOLSHED_STDIO_SHIM}",
+      "args": [
+        "gmail.google_drive.create_google_drive_doc.trailhead.starter_pack.hubble.sales_insight.salesforce.slack.conversational_intelligence.web_search.customer_panorama.execute_internal_search"
+      ],
+      "env": {}
+    },
+    "processout": {
+      "type": "http",
+      "url": "https://docs.processout.com/mcp"
+    } ,
+    "whimsical-remote": {
+      "type": "http",
+      "url": "https://mcp.whimsical.com/mcp"
+    }
+    }
+  }

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Velvet — Le voyage à grande vitesse réinventé</title>
+<link rel="icon" href="/img/logo-velvet.svg">
+<link rel="preload" href="/fonts/RocGroteskBlack.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/WorkSans-VariableFont_wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/velvet.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar__inner">
+    <a href="/"><img class="topbar__logo" src="/img/logo-velvet.svg" alt="Velvet"></a>
+    <nav class="topbar__nav">
+      <a href="/">Réserver</a>
+      <a href="/espace">Mon espace</a>
+      <a href="/bord">À bord</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero__map" aria-hidden="true"></div>
+  <div class="wrap hero__inner">
+    <p class="eyebrow eyebrow--marked" style="opacity:1">Ouverture du réseau — 2028</p>
+    <h1 class="mega">
+      <span class="reveal-line"><span>Le voyage</span></span>
+      <span class="reveal-line"><span>à grande vitesse</span></span>
+      <span class="reveal-line"><span>réinventé</span></span>
+    </h1>
+    <p class="hero__lede">Du choix du siège au paiement, un seul geste continu. Cinq villes,
+      une ligne, aucune friction.</p>
+
+    <!-- Le réseau : les deux gares du voyage de Camille sont marquées. -->
+    <div class="hero__rail rail" role="img" aria-label="Réseau Velvet : Paris, Angers, Rennes, Nantes, Bordeaux">
+      <div class="rail__track"><span class="rail__node"></span></div>
+      <ol class="rail__stops">
+        <li class="rail__stop is-on">Paris</li>
+        <li class="rail__stop">Angers</li>
+        <li class="rail__stop">Rennes</li>
+        <li class="rail__stop">Nantes</li>
+        <li class="rail__stop is-on">Bordeaux</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+
+    <ol class="steps" aria-label="Étapes de la réservation">
+      <li class="steps__item is-on">Trajet</li>
+      <li class="steps__item">Paiement</li>
+      <li class="steps__item">Billet</li>
+    </ol>
+
+    <div class="grid grid--sidebar">
+
+      <div class="stack-lg">
+        <div>
+          <p class="eyebrow eyebrow--marked">Votre trajet</p>
+          <h2 id="route-title">Paris → Bordeaux</h2>
+        </div>
+
+        <div class="card">
+          <p class="eyebrow eyebrow--marked" id="leg-out" hidden>Aller</p>
+          <div class="between">
+            <span class="tag tag--pink">Départ direct</span>
+            <span class="mono" id="train-number">VLT 8412</span>
+          </div>
+          <div class="trip">
+            <div>
+              <div class="trip__station" id="from">Paris Montparnasse</div>
+              <div class="trip__time" id="departure">08:12</div>
+            </div>
+            <div class="trip__line"></div>
+            <div>
+              <div class="trip__station" id="to">Bordeaux Saint-Jean</div>
+              <div class="trip__time" id="arrival">10:19</div>
+            </div>
+          </div>
+          <div class="rows">
+            <div><span>Date</span><strong id="travel-date">—</strong></div>
+            <div><span>Tarif</span><strong id="fare">Velvet Flex — échangeable et remboursable</strong></div>
+            <div><span>Place</span><strong id="seat">Voiture 4 — place 32A</strong></div>
+            <div><span>Voyageur</span><strong id="passenger">Camille Martin</strong></div>
+          </div>
+        </div>
+
+        <!-- Le retour, même grammaire que l'aller : il n'apparaît que si le
+             voyageur choisit un aller-retour. -->
+        <div class="card" id="leg-return-card" hidden>
+          <p class="eyebrow eyebrow--marked">Retour</p>
+          <div class="between">
+            <span class="tag tag--pink">Départ direct</span>
+            <span class="mono" id="r-train-number">VLT 8433</span>
+          </div>
+          <div class="trip">
+            <div>
+              <div class="trip__station" id="r-from">Bordeaux Saint-Jean</div>
+              <div class="trip__time" id="r-departure">17:34</div>
+            </div>
+            <div class="trip__line"></div>
+            <div>
+              <div class="trip__station" id="r-to">Paris Montparnasse</div>
+              <div class="trip__time" id="r-arrival">19:41</div>
+            </div>
+          </div>
+          <div class="rows">
+            <div><span>Date</span><strong id="r-travel-date">—</strong></div>
+            <div><span>Place</span><strong id="r-seat">Voiture 6 — place 12D</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="card card--green summary stack">
+        <p class="eyebrow">Récapitulatif</p>
+        <div class="grid grid--2" style="gap:var(--sp-2)" role="radiogroup" aria-label="Type de trajet">
+          <button type="button" class="btn btn--toggle is-active" id="trip-aller-simple" data-trip="aller_simple">Aller simple</button>
+          <button type="button" class="btn btn--toggle" id="trip-aller-retour" data-trip="aller_retour">Aller-retour</button>
+        </div>
+        <div class="rows">
+          <div><span>Billet Velvet Flex</span><strong id="price">75,00 €</strong></div>
+          <div><span>Réservation de place</span><strong>Incluse</strong></div>
+        </div>
+        <div class="total"><span>Total</span><span id="total">75,00 €</span></div>
+        <a class="btn btn--block" href="/paiement?tripType=aller_simple" id="pay-link">
+          Payer mon billet <span class="btn__arrow" aria-hidden="true">→</span>
+        </a>
+        <p class="micro muted flush">Paiement sécurisé. Aucune donnée de carte n’est conservée
+          par Velvet.</p>
+      </aside>
+
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <img src="/img/logo-velvet.svg" alt="Velvet">
+    <span class="footer__net">Paris · Angers · Rennes · Nantes · Bordeaux</span>
+    <span>Démonstration — environnement de test</span>
+  </div>
+</footer>
+
+<script src="/js/common.js"></script>
+<script>
+  VELVET.config().then(({ booking, fares }) => {
+    VELVET.el('from').textContent = booking.origin;
+    VELVET.el('to').textContent = booking.destination;
+    VELVET.el('departure').textContent = booking.departure;
+    VELVET.el('arrival').textContent = booking.arrival;
+    VELVET.el('train-number').textContent = booking.trainNumber;
+    VELVET.el('travel-date').textContent = VELVET.longDate(booking.travelDate);
+    VELVET.el('fare').textContent = `${booking.fareLabel} — échangeable et remboursable`;
+    VELVET.el('seat').textContent = `Voiture ${booking.coach} — place ${booking.seat}`;
+    VELVET.el('passenger').textContent = booking.passenger.name;
+    const cityFrom = booking.origin.split(' ')[0];
+    const cityTo = booking.destination.split(' ')[0];
+
+    // Le retour reprend le dossier à l'envers, deux jours plus tard : de quoi
+    // rendre le scénario crédible sans inventer un second dossier.
+    VELVET.el('r-from').textContent = booking.destination;
+    VELVET.el('r-to').textContent = booking.origin;
+    const back = new Date(`${booking.travelDate}T00:00:00`);
+    back.setDate(back.getDate() + 2);
+    const pad = (n) => String(n).padStart(2, '0');
+    VELVET.el('r-travel-date').textContent = VELVET.longDate(
+      `${back.getFullYear()}-${pad(back.getMonth() + 1)}-${pad(back.getDate())}`
+    );
+
+    const toggles = document.querySelectorAll('[data-trip]');
+    function selectTrip(tripType) {
+      const fare = fares[tripType] || fares.aller_simple;
+      const roundTrip = tripType === 'aller_retour';
+      // La flèche dit le sens du voyage : simple à l'aller, double au retour.
+      VELVET.el('route-title').textContent =
+        `${cityFrom} ${roundTrip ? '↔' : '→'} ${cityTo}`;
+      // Un seul billet ne se nomme pas « Aller » : l'étiquette n'a de sens
+      // qu'en face de son retour.
+      VELVET.el('leg-out').hidden = !roundTrip;
+      VELVET.el('leg-return-card').hidden = !roundTrip;
+      VELVET.el('price').textContent = VELVET.money(fare.amount);
+      VELVET.el('total').textContent = VELVET.money(fare.amount);
+      VELVET.el('pay-link').href = `/paiement?tripType=${tripType}`;
+      toggles.forEach((btn) => btn.classList.toggle('is-active', btn.dataset.trip === tripType));
+    }
+    toggles.forEach((btn) => btn.addEventListener('click', () => selectTrip(btn.dataset.trip)));
+    selectTrip('aller_simple');
+  });
+</script>
+</body>
+</html>

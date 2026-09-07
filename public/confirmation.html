@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Velvet — Votre billet</title>
+<link rel="icon" href="/img/logo-velvet.svg">
+<link rel="stylesheet" href="/css/velvet.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar__inner">
+    <a href="/"><img class="topbar__logo" src="/img/logo-velvet.svg" alt="Velvet"></a>
+    <nav class="topbar__nav">
+      <a href="/">Réserver</a>
+      <a href="/espace">Mon espace</a>
+      <a href="/bord">À bord</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" style="padding:var(--sp-5) 0">
+  <div class="hero__map" aria-hidden="true"></div>
+  <div class="wrap hero__inner">
+    <div class="between between--top">
+      <div>
+        <p class="eyebrow eyebrow--marked" style="opacity:1">Étape 3 sur 3</p>
+        <h1 class="display" id="headline">Votre billet est émis</h1>
+        <p class="hero__lede" id="subline">Un e-mail de confirmation part vers votre adresse.</p>
+      </div>
+      <div class="stack center">
+        <span class="stamp">Émis</span>
+        <span class="pnr pnr--inverse" id="pnr-badge">—</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section--beige">
+  <div class="wrap">
+    <div id="banner" class="alert" hidden></div>
+
+    <ol class="steps" aria-label="Étapes de la réservation">
+      <li class="steps__item is-done">Trajet</li>
+      <li class="steps__item is-done">Paiement</li>
+      <li class="steps__item is-on">Billet</li>
+    </ol>
+
+    <div class="grid grid--sidebar">
+
+      <!-- Le billet : une seule pièce, découpée, avec son talon détachable. -->
+      <div class="ticket">
+        <div class="ticket__main stack">
+          <div class="between">
+            <span class="tag tag--pink" id="fare-tag">—</span>
+            <span class="mono" id="train-number">—</span>
+          </div>
+          <div class="trip">
+            <div>
+              <div class="trip__station" id="from">—</div>
+              <div class="trip__time" id="departure">—</div>
+            </div>
+            <div class="trip__line"></div>
+            <div>
+              <div class="trip__station" id="to">—</div>
+              <div class="trip__time" id="arrival">—</div>
+            </div>
+          </div>
+          <div class="rows">
+            <div><span>Date</span><strong id="travel-date">—</strong></div>
+            <div><span>Voyageur</span><strong id="passenger">—</strong></div>
+            <div><span>Place</span><strong id="seat">—</strong></div>
+          </div>
+          <div class="total"><span>Réglé</span><span id="amount">—</span></div>
+          <div class="row">
+            <a class="btn btn--small" href="/espace">Gérer mon voyage</a>
+            <a class="btn btn--small btn--ghost" id="receipt" href="#" target="_blank" rel="noopener" hidden>Voir le reçu</a>
+          </div>
+        </div>
+
+        <div class="ticket__stub">
+          <span class="ticket__notch ticket__notch--top" aria-hidden="true"></span>
+          <span class="ticket__notch ticket__notch--bottom" aria-hidden="true"></span>
+          <span class="ticket__stub-text" id="stub-text">Velvet — embarquement</span>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="card" data-reveal style="--i:0">
+          <p class="eyebrow eyebrow--marked">Moyen de paiement</p>
+          <dl class="dl small" id="card-list"><dt>—</dt><dd>Aucun paiement rattaché à cet écran</dd></dl>
+        </div>
+        <div class="card card--ink" data-reveal style="--i:1">
+          <p class="eyebrow">Traçabilité du dossier</p>
+          <dl class="dl dl--left small mono" id="meta-list"></dl>
+          <p class="micro muted" style="margin:var(--sp-2) 0 0">
+            Ces clés accompagnent chaque objet financier lié au dossier : billet, prestation
+            complémentaire, remboursement, litige.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <img src="/img/logo-velvet.svg" alt="Velvet">
+    <span class="footer__net">Paris · Angers · Rennes · Nantes · Bordeaux</span>
+    <span>Démonstration — environnement de test</span>
+  </div>
+</footer>
+
+<script src="/js/common.js"></script>
+<script>
+(async () => {
+  const banner = VELVET.el('banner');
+  const params = new URLSearchParams(location.search);
+
+  try {
+    const { booking } = await VELVET.config();
+
+    VELVET.el('from').textContent = booking.origin;
+    VELVET.el('to').textContent = booking.destination;
+    VELVET.el('departure').textContent = booking.departure;
+    VELVET.el('arrival').textContent = booking.arrival;
+    VELVET.el('train-number').textContent = booking.trainNumber;
+    VELVET.el('travel-date').textContent = VELVET.longDate(booking.travelDate);
+    VELVET.el('passenger').textContent = booking.passenger.name;
+    VELVET.el('seat').textContent = `Voiture ${booking.coach} — place ${booking.seat}`;
+    VELVET.el('fare-tag').textContent = booking.fareLabel;
+    VELVET.el('pnr-badge').textContent = booking.pnr;
+    VELVET.el('amount').textContent = VELVET.money(booking.amount);
+
+    // Le talon reprend la référence du dossier : c'est ce que le chef de bord lit.
+    function setStub(pnr) {
+      VELVET.el('stub-text').textContent = `${pnr} · voiture ${booking.coach} · ${booking.seat}`;
+    }
+    setStub(booking.pnr);
+
+    // Deux provenances possibles : le Payment Element (payment_intent) ou la
+    // session de paiement à bord (session_id).
+    let piId = params.get('payment_intent');
+    if (!piId && params.get('session_id')) {
+      const s = await VELVET.get(`/api/bord/session/${params.get('session_id')}`);
+      piId = s.paymentIntentId;
+      VELVET.el('headline').textContent = 'Régularisation encaissée';
+      VELVET.el('subline').textContent = 'Le paiement est rattaché au dossier de réservation.';
+    }
+    if (!piId) {
+      VELVET.banner(banner, 'Aucun paiement à afficher — ouvrez cet écran depuis le parcours de paiement.', 'info');
+      return;
+    }
+
+    const pay = await VELVET.get(`/api/payment/${piId}`);
+
+    VELVET.el('amount').textContent = VELVET.money(pay.amount, pay.currency);
+    if (pay.metadata && pay.metadata.booking_reference) {
+      VELVET.el('pnr-badge').textContent = pay.metadata.booking_reference;
+      setStub(pay.metadata.booking_reference);
+    }
+    if (pay.status !== 'succeeded') {
+      VELVET.el('headline').textContent = 'Paiement en cours de traitement';
+      VELVET.banner(banner, `Statut de l’intention : ${pay.status}`, 'info');
+    }
+    if (pay.receiptUrl) {
+      const r = VELVET.el('receipt');
+      r.href = pay.receiptUrl;
+      r.hidden = false;
+    }
+
+    const c = pay.card;
+    const tds = c && c.threeDSecure;
+    VELVET.el('card-list').innerHTML = c
+      ? [
+          ['Réseau', `${(c.brand || '').toUpperCase()}${c.network && c.network !== c.brand ? ` · ${c.network}` : ''}`],
+          ['Numéro', `•••• ${c.last4}`],
+          ['Pays d’émission', c.country || '—'],
+          ['Portefeuille', c.wallet || 'Aucun'],
+          ['Authentification', tds ? `3-D Secure ${tds.version || ''} — ${tds.result || ''}` : 'Non requise'],
+          ['Parcours', tds && tds.authentication_flow ? tds.authentication_flow : '—'],
+          ['Enregistrée', pay.savedPaymentMethod ? `oui (${pay.savedPaymentMethod.allowRedisplay})` : 'non'],
+        ]
+          .map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`)
+          .join('')
+      : '<dt>—</dt><dd>Détail indisponible</dd>';
+
+    VELVET.el('meta-list').innerHTML = Object.entries(pay.metadata || {})
+      .map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`)
+      .join('');
+  } catch (err) {
+    VELVET.banner(banner, err.message, 'error');
+  }
+})();
+</script>
+</body>
+</html>

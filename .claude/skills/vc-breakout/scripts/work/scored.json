@@ -1,0 +1,107 @@
+{
+  "scored_accounts": [
+    {
+      "account_id": "0015b00001uWxzlAAC",
+      "account_name": "Catalog",
+      "ae": "Jeanne",
+      "country": "France",
+      "startup_type": null,
+      "funding_stage": "other",
+      "leaderboard": "Pre-Series A",
+      "ai_flag": true,
+      "breakout_score": 0.1,
+      "dimension_scores": {
+        "piv_growth": 0.0,
+        "funding_momentum": 0.0,
+        "ext_momentum": 1.0,
+        "vc_tier": 0.0,
+        "founder_pedigree": 0.0
+      },
+      "weights_used": {
+        "piv_growth": 0.25,
+        "funding_momentum": 0.2,
+        "ext_momentum": 0.1,
+        "vc_tier": 0.1,
+        "founder_pedigree": 0.35
+      },
+      "piv_last_90d_eur": null,
+      "piv_90d_growth_pct": null,
+      "months_since_round": 17,
+      "key_signal": "Strong external momentum",
+      "recommended_action": "Deprioritize \u2014 acquired, no longer independently VC-backed",
+      "rank": 3,
+      "delta_rank": "NEW"
+    },
+    {
+      "account_id": "001TQ00000PEoUsYAL",
+      "account_name": "Sairen",
+      "ae": "Jeanne",
+      "country": "France",
+      "startup_type": "p2",
+      "funding_stage": "pre_series_a",
+      "leaderboard": "Pre-Series A",
+      "ai_flag": true,
+      "breakout_score": 0.4,
+      "dimension_scores": {
+        "piv_growth": 0.0,
+        "funding_momentum": 0.0,
+        "ext_momentum": 0.0,
+        "vc_tier": 4.0,
+        "founder_pedigree": 0.0
+      },
+      "weights_used": {
+        "piv_growth": 0.1,
+        "funding_momentum": 0.15,
+        "ext_momentum": 0.1,
+        "vc_tier": 0.1,
+        "founder_pedigree": 0.55
+      },
+      "piv_last_90d_eur": null,
+      "piv_90d_growth_pct": null,
+      "months_since_round": 21,
+      "key_signal": "Startup Type: p2",
+      "recommended_action": "Monitor \u2014 no urgent trigger",
+      "rank": 2,
+      "delta_rank": "NEW"
+    },
+    {
+      "account_id": "001TQ000009hbIhYAI",
+      "account_name": "DigitalKin",
+      "ae": "Jeanne",
+      "country": "France",
+      "startup_type": "p2",
+      "funding_stage": "pre_series_a",
+      "leaderboard": "Pre-Series A",
+      "ai_flag": true,
+      "breakout_score": 0.9,
+      "dimension_scores": {
+        "piv_growth": 0.0,
+        "funding_momentum": 1.0,
+        "ext_momentum": 3.0,
+        "vc_tier": 4.0,
+        "founder_pedigree": 0.0
+      },
+      "weights_used": {
+        "piv_growth": 0.1,
+        "funding_momentum": 0.15,
+        "ext_momentum": 0.1,
+        "vc_tier": 0.1,
+        "founder_pedigree": 0.55
+      },
+      "piv_last_90d_eur": null,
+      "piv_90d_growth_pct": null,
+      "months_since_round": 23,
+      "key_signal": "Startup Type: p2 (Seed Round)",
+      "recommended_action": "Monitor \u2014 no urgent trigger",
+      "rank": 1,
+      "delta_rank": "NEW"
+    }
+  ],
+  "weekly_movers": [],
+  "summary": {
+    "total_accounts": 3,
+    "by_ae": {
+      "Jeanne": 3
+    }
+  }
+}

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Velvet — Paiement</title>
+<link rel="icon" href="/img/logo-velvet.svg">
+<link rel="stylesheet" href="/css/velvet.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar__inner">
+    <a href="/"><img class="topbar__logo" src="/img/logo-velvet.svg" alt="Velvet"></a>
+    <nav class="topbar__nav">
+      <a href="/">Réserver</a>
+      <a href="/espace">Mon espace</a>
+      <a href="/bord">À bord</a>
+    </nav>
+  </div>
+</header>
+
+<section class="section">
+  <div class="wrap">
+
+    <div class="between between--top" style="margin-bottom:var(--sp-3)">
+      <div>
+        <p class="eyebrow eyebrow--marked">Étape 2 sur 3</p>
+        <h1>Régler votre voyage</h1>
+      </div>
+      <span class="pnr" id="pnr-badge">—</span>
+    </div>
+
+    <ol class="steps" aria-label="Étapes de la réservation">
+      <li class="steps__item is-done">Trajet</li>
+      <li class="steps__item is-on">Paiement</li>
+      <li class="steps__item">Billet</li>
+    </ol>
+
+    <div class="pay-shell">
+
+      <div class="stack-lg">
+        <div id="banner" class="alert" hidden></div>
+
+        <form id="payment-form" class="card card--frame">
+          <div id="payment-element"></div>
+
+          <button id="submit" class="btn btn--block" type="submit" disabled>
+            <span id="submit-label">Payer 75,00 €</span>
+          </button>
+
+          <div class="pay-status" id="status"></div>
+
+          <div class="trust">
+            <span>Aucun numéro de carte conservé</span>
+            <span>3-D Secure sans quitter Velvet</span>
+            <span>Reprise dans le même dossier</span>
+          </div>
+        </form>
+
+        <div class="card card--flat" data-reveal>
+          <p class="eyebrow eyebrow--marked">Ce dossier suit le paiement</p>
+          <dl class="dl dl--left small" id="meta-list"></dl>
+        </div>
+      </div>
+
+      <aside class="stack summary">
+        <div class="card card--green stack">
+          <p class="eyebrow">Votre voyage</p>
+          <div class="trip trip--stack">
+            <div>
+              <div class="trip__station" id="from">—</div>
+              <div class="trip__time" id="departure">—</div>
+            </div>
+            <div class="trip__line"></div>
+            <div>
+              <div class="trip__station" id="to">—</div>
+              <div class="trip__time" id="arrival">—</div>
+            </div>
+          </div>
+          <div class="rows">
+            <div><span>Date</span><strong id="travel-date">—</strong></div>
+            <div><span>Tarif</span><strong id="fare">—</strong></div>
+            <div><span>Voyageur</span><strong id="passenger">—</strong></div>
+          </div>
+          <div class="total"><span>Total</span><span id="total">—</span></div>
+        </div>
+
+        <div class="card">
+          <p class="eyebrow">Intention de paiement</p>
+          <p class="mono flush" id="pi-id" style="word-break:break-all">—</p>
+          <p class="micro muted" style="margin:.6rem 0 0">
+            Cet identifiant ne change pas en cas de refus : la reprise se fait dans le même dossier.
+          </p>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <img src="/img/logo-velvet.svg" alt="Velvet">
+    <span class="footer__net">Paris · Angers · Rennes · Nantes · Bordeaux</span>
+    <span>Démonstration — environnement de test</span>
+  </div>
+</footer>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script src="/js/common.js"></script>
+<script src="/js/paiement.js"></script>
+</body>
+</html>

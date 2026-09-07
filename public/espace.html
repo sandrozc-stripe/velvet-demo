@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Velvet — Mon espace</title>
+<link rel="icon" href="/img/logo-velvet.svg">
+<link rel="stylesheet" href="/css/velvet.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar__inner">
+    <a href="/"><img class="topbar__logo" src="/img/logo-velvet.svg" alt="Velvet"></a>
+    <nav class="topbar__nav">
+      <a href="/">Réserver</a>
+      <a href="/espace">Mon espace</a>
+      <a href="/bord">À bord</a>
+    </nav>
+  </div>
+</header>
+
+<section class="section section--green section--tight" style="padding:var(--sp-4) 0">
+  <div class="wrap between between--top">
+    <div class="row" style="gap:var(--sp-3)">
+      <span class="avatar" id="initials" aria-hidden="true">—</span>
+      <div>
+        <p class="eyebrow eyebrow--marked" style="opacity:1">Espace voyageur</p>
+        <h1 id="hello">Bonjour</h1>
+        <p class="small muted flush" id="loyalty">—</p>
+      </div>
+    </div>
+    <span class="pnr pnr--inverse" id="pnr-badge">—</span>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div id="banner" class="alert" hidden></div>
+
+    <div class="grid grid--sidebar" style="gap:var(--sp-4)">
+
+      <div class="stack-lg">
+        <div class="between between--top">
+          <div>
+            <p class="eyebrow eyebrow--marked">Mes réservations</p>
+            <h2>Vos voyages</h2>
+          </div>
+          <p class="micro muted flush" style="max-width:22ch;text-align:right">
+            Sélectionnez un voyage pour l’annuler et le rembourser.
+          </p>
+        </div>
+
+        <div class="stack" id="bookings">
+          <p class="small muted flush">Chargement…</p>
+        </div>
+      </div>
+
+      <aside class="card card--frame stack summary">
+        <p class="eyebrow eyebrow--marked">Compléter mon voyage</p>
+        <p class="small muted">
+          Réglez en un clic avec Apple Pay, Google Pay ou Link, avec votre carte
+          enregistrée, ou choisissez-en une autre au moment de payer.
+        </p>
+        <div class="stack" id="ancillaries"></div>
+        <form id="ancillary-form" class="stack" hidden>
+          <div id="ancillary-summary" class="small muted"></div>
+          <div id="ancillary-express" hidden>
+            <div id="ancillary-express-element"></div>
+            <p class="or-rule"><span>ou payer par carte</span></p>
+          </div>
+          <div id="ancillary-payment-element"></div>
+          <button id="ancillary-submit" class="btn btn--block" type="submit" disabled>
+            <span id="ancillary-submit-label">Payer</span>
+          </button>
+          <button id="ancillary-cancel" class="btn btn--ghost btn--small btn--block" type="button">Revenir aux options</button>
+        </form>
+        <div class="pay-status" id="status"></div>
+      </aside>
+
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <img src="/img/logo-velvet.svg" alt="Velvet">
+    <span class="footer__net">Paris · Angers · Rennes · Nantes · Bordeaux</span>
+    <span>Démonstration — environnement de test</span>
+  </div>
+</footer>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script src="/js/common.js"></script>
+<script src="/js/espace.js"></script>
+</body>
+</html>

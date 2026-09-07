@@ -1,0 +1,24 @@
+{
+  "name": "velvet-rfp-demo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "Velvet PSP RFP - Stripe sandbox demonstration",
+  "scripts": {
+    "start": "node server.js",
+    "smoke": "node scripts/smoke.js",
+    "pmc": "node scripts/configure-pmc.js",
+    "seed": "node scripts/seed.js",
+    "preflight": "node scripts/preflight.js",
+    "reset": "node scripts/reset-demo.js",
+    "listen": "/opt/homebrew/bin/stripe listen --skip-update --api-key \"$(grep '^STRIPE_SECRET_KEY=' .env | cut -d= -f2)\" --forward-to localhost:4242/webhook",
+    "demo:start": "bash scripts/start-demo.sh",
+    "demo:stop": "bash scripts/stop-demo.sh"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "qrcode-svg": "^1.1.0",
+    "stripe": "^19.1.0"
+  }
+}
