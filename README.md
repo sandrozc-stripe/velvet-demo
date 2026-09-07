@@ -97,7 +97,7 @@ et sans conséquence :
 | URL | Rôle | Moment |
 |---|---|---|
 | `/` | Réservation Paris → Bordeaux, 75 € | 02:00 |
-| `/paiement` | Payment Element sur session Checkout (`ui_mode: 'elements'`), 3-D Secure | 04:30–10:00 |
+| `/paiement` | Payment Element sur session Checkout (`ui_mode: 'elements'`), 3-D Secure, interrupteur Adaptive Pricing | 02:00–10:00 |
 | `/confirmation` | Billet confirmé, PNR, données opérateur repliables | 10:00 |
 | `/espace` | Carte enregistrée, bagage 15 € hors session | 10:00–12:30 |
 | `/bord` | QR code de régularisation, session unique par PNR | 18:30 |
@@ -185,6 +185,51 @@ pose, et `saved_payment_method_options.payment_method_save` reste `disabled`. Il
 de CustomerSession dans l'intégration — le réaffichage de la carte enregistrée découle du
 `customer` porté par la session. La preuve de l'enregistrement reste sur le moyen de
 paiement : `allow_redisplay: 'always'` et rattachement au client.
+
+**Adaptive Pricing — quatre choses mesurées sur ce compte, dont deux contre-intuitives.**
+
+*Le réglage du Dashboard est déjà actif.* Les sessions Checkout de ce sandbox reviennent en
+`adaptive_pricing.enabled = true` alors que le code ne demandait rien. Le paramètre de
+`routes/booking.js` n'ouvre donc pas la fonctionnalité — il rend l'état **désactivé**
+démontrable au lieu de le laisser hériter du compte. C'est pour cela qu'il est toujours
+transmis, jamais omis, dans les deux positions de l'interrupteur.
+
+*Le suffixe d'e-mail attend un code pays ISO 3166 alpha-2, et « uk » n'en est pas un.*
+Mesuré : `+location_uk` et `+location_UK` renvoient une session **sans aucune option de
+devise** — donc un écran en euros avec l'interrupteur en position « activé », la panne
+silencieuse. `+location_gb` et `+location_GB` donnent tous deux 67,01 £ ; `+location_JP`
+donne 14 019 ¥. La casse est indifférente, le code ne l'est pas. Le client de démonstration
+`cus_VD2KkdA6Bs9Sz8` porte donc `camille.martin+location_gb@example.com` : changer
+`config.js` sans changer l'adresse du client ferait naître un second client sans carte
+enregistrée, et le beat 10:00 s'effondrerait.
+
+⚠️ **Le suffixe est projeté.** Vérifié à l'écran : le bloc Link du formulaire de carte
+préremplit `camille.martin+location_gb@example.com`, et l'adresse ressort aussi sur le reçu
+Stripe et dans les coordonnées de facturation du moyen de paiement enregistré. C'est
+exactement le champ que l'on montre en gros plan au beat 07:00. Prenez-le de front en une
+phrase — « c'est l'adresse de test qui simule la localisation du voyageur » — ou repassez le
+client sur une adresse propre et renoncez au beat Adaptive Pricing : les deux ne peuvent pas
+être vrais en même temps sur le même client.
+
+*La session vue par l'API reste en euros.* `currency: eur`, `amount_total: 7500`, quelle que
+soit la devise présentée : `currencyOptions` n'existe que sur l'objet de session **côté
+navigateur**, et c'est `presentment_details` — sur la session, le PaymentIntent, le paiement
+et le remboursement — qui porte ce que le voyageur a réglé. Le champ est **absent** quand
+aucune conversion n'a eu lieu, pas `null` : le billet ne teste donc pas l'égalité à `null`.
+Corollaire rassurant pour le rapprochement : `/ops` continue de compter des euros.
+
+*La liste des moyens de paiement ne change pas.* On pourrait l'attendre — elle ne bouge pas
+ici : `cartes_bancaires` reste affiché sous une présentation en livres. **Ne promettez pas au
+comité que la conversion débloque des moyens locaux** ; l'effet visible est la devise, le
+sélecteur de devise, et la ligne de taux garanti (« 1 EUR = 0,8935 GBP, frais de conversion
+de 4 % inclus »). Pour que le basculement ouvre aussi Pay by Bank ou Klarna, il faudrait
+élargir la configuration des moyens de paiement — ce qui changerait la liste sur **tous** les
+autres beats. Écarté volontairement.
+
+Deux détails de scène : `setup_future_usage: 'off_session'` **ne supprime pas** la conversion
+(vérifié, la combinaison exacte du parcours), et le SDK formate le total en locale française,
+ce qui donne « 67,01 £GB » et non « 67,01 £ » — c'est le formatage de Stripe, lu sur la
+session, et le corriger à la main reviendrait à recalculer un montant à l'écran.
 
 **Le délai d'indexation de la recherche.** `/v1/payment_intents/search` met 45 à 60
 secondes à indexer un paiement neuf. `paymentIntents.list({customer})` est immédiat. Le

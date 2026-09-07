@@ -25,7 +25,21 @@ const BOOKING = {
   currency: 'eur',
   passenger: {
     name: 'Camille Martin',
-    email: 'camille.martin@example.com',
+    // Le suffixe « +location_gb » est la façon documentée par Stripe de simuler
+    // un acheteur localisé au Royaume-Uni : c'est lui qui déclenche la
+    // présentation en livres sterling quand Adaptive Pricing est actif, sans
+    // quoi le bac à sable présenterait toujours des euros.
+    //
+    // « gb », pas « uk ». Stripe attend un code pays ISO 3166 alpha-2, et « uk »
+    // n'en est pas un : mesuré sur ce compte, « +location_uk » renvoie une
+    // session sans aucune option de devise, donc un écran en euros avec
+    // l'interrupteur en position « activé ». La casse, elle, est indifférente.
+    //
+    // Cette adresse résout le client cus_VD2KkdA6Bs9Sz8, qui porte déjà la carte
+    // enregistrée du parcours : la modifier ici sans la modifier sur le client
+    // ferait naître un second client sans carte, et l'achat en un geste de
+    // l'espace voyageur s'effondrerait.
+    email: 'camille.martin+location_gb@example.com',
     loyaltyId: 'VLT-LOY-88231',
   },
 };

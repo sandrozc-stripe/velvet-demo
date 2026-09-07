@@ -885,6 +885,19 @@ body.is-loaded .hero__rail .rail__track { animation: draw 1.4s var(--ease) 0.6s 
   background: var(--c-pink);
 }
 
+/* Le sélecteur de devise reste collé au Payment Element : c'est la même
+   décision de paiement, pas un réglage séparé. Quand aucune conversion n'est
+   possible il ne rend rien, mais son iframe laisserait une gouttière dans la
+   carte — public/js/paiement.js masque alors le conteneur. */
+#currency-selector { margin-bottom: var(--sp-3); }
+
+/* Panneau réservé au présentateur. La barre rose sur le bord gauche et la
+   mention en tête suffisent à dire qu'il ne fait pas partie du parcours
+   voyageur : il n'y a rien de tel sur velvet.fr. */
+.demo-panel { border-left: 3px solid var(--c-pink); }
+.demo-panel .small { margin: 0 0 var(--sp-2); }
+.demo-panel #adaptive-state { margin-top: var(--sp-2); }
+
 /* Carte enregistrée réutilisable : rangée native Velvet, pas un iframe. */
 .pm {
   display: flex;

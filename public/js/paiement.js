@@ -19,7 +19,29 @@
 
   try {
     const { publishableKey, booking } = await VELVET.config();
-    const tripType = new URLSearchParams(location.search).get('tripType') || 'aller_simple';
+    const params = new URLSearchParams(location.search);
+    const tripType = params.get('tripType') || 'aller_simple';
+
+    // Adaptive Pricing se règle à la création de la session Checkout : le
+    // basculement passe donc par l'URL, comme le type de trajet, et l'écran
+    // repart d'une session neuve. Cela garde aussi le garde-fou de répétition
+    // cohérent — le `location.reload()` plus bas conserve la chaîne de requête,
+    // donc le réglage affiché survit au rechargement.
+    const adaptivePricing = params.get('adaptive') === '1';
+
+    // Le panneau est câblé avant la création de la session : si l'API refuse, le
+    // présentateur doit pouvoir rebasculer sans réécrire l'URL à la main.
+    document.querySelectorAll('[data-adaptive]').forEach((btn) => {
+      const wants = btn.dataset.adaptive === '1';
+      btn.classList.toggle('is-active', wants === adaptivePricing);
+      btn.setAttribute('aria-checked', String(wants === adaptivePricing));
+      btn.addEventListener('click', () => {
+        if (wants === adaptivePricing) return;
+        const next = new URLSearchParams({ tripType });
+        if (wants) next.set('adaptive', '1');
+        location.href = `/paiement?${next}`;
+      });
+    });
 
     VELVET.el('from').textContent = booking.origin;
     VELVET.el('to').textContent = booking.destination;
@@ -31,7 +53,7 @@
     // Chaque chargement crée une session neuve, sur un PNR neuf : indispensable
     // pour enchaîner les répétitions sans réutiliser une session déjà réglée,
     // et pour que le Dashboard filtré sur ce PNR ne montre que ce dossier.
-    const session = await VELVET.post('/api/booking', { tripType });
+    const session = await VELVET.post('/api/booking', { tripType, adaptivePricing });
 
     VELVET.el('fare').textContent = session.fareLabel;
     VELVET.el('pnr-badge').textContent = session.pnr;
@@ -63,6 +85,15 @@
     // `customer` — il n'y a plus de CustomerSession à créer pour cela.
     const checkout = stripe.initCheckoutElementsSdk({
       clientSecret: session.clientSecret,
+      // `adaptivePricing` est une option de premier niveau, aux côtés de
+      // clientSecret — et non un réglage d'Elements. `allowed` ne décide de
+      // rien : il déclare que cette intégration sait présenter une autre devise,
+      // c'est-à-dire que tous les montants affichés sont lus sur la session et
+      // que le Currency Selector Element est monté. Les deux sont vrais en
+      // permanence ici, donc il reste toujours à true : seul
+      // `adaptive_pricing.enabled` de la session varie, pour que le basculement
+      // n'ait qu'une seule cause possible à l'écran.
+      adaptivePricing: { allowed: true },
       elementsOptions: {
         appearance: VELVET.appearance,
         fonts: await VELVET.fonts(),
@@ -79,6 +110,12 @@
     });
     paymentElement.mount('#payment-element');
 
+    // Obligatoire dès qu'Adaptive Pricing est autorisé : c'est ce composant qui
+    // laisse le voyageur choisir entre sa devise et celle de Velvet, et Stripe
+    // en fait une condition d'usage. Monté sans condition — sans
+    // `currencyOptions`, il ne rend rien.
+    checkout.createCurrencySelectorElement().mount('#currency-selector');
+
     paymentElement.on('loaderror', (e) => {
       VELVET.banner(banner, `Formulaire indisponible : ${e.error && e.error.message}`, 'error');
     });
@@ -90,10 +127,34 @@
     // Le montant affiché est lu sur la session, pas recalculé côté navigateur :
     // c'est ce que `confirm` exige, et c'est ce qui ferait suivre l'écran sans
     // retouche si une remise ou une conversion de devise s'ajoutait un jour.
+    const currencySelector = VELVET.el('currency-selector');
+    const adaptiveState = VELVET.el('adaptive-state');
+
     function renderTotal(checkoutSession) {
       VELVET.el('total').textContent = checkoutSession.total.total.amount;
       submitLabel.textContent = `Payer ${checkoutSession.total.total.amount}`;
       submit.disabled = !checkoutSession.canConfirm;
+
+      // `currencyOptions` n'est renseigné que si Stripe a effectivement une
+      // conversion à proposer. Vide, le sélecteur ne rend rien de visible mais
+      // son iframe laisserait une gouttière morte dans la carte : on masque le
+      // conteneur plutôt que de monter le composant sous condition.
+      const options = checkoutSession.currencyOptions || [];
+      currencySelector.hidden = options.length === 0;
+
+      // Ce que le présentateur doit pouvoir lire à dix mètres : le réglage
+      // renvoyé par l'API, la devise que Velvet encaisse, celle qui est
+      // présentée, et le taux garanti. Aucune valeur n'est recalculée ici —
+      // toutes viennent de la session.
+      const converted = options.find((o) => o.currencyConversion);
+      adaptiveState.innerHTML = [
+        ['adaptive_pricing', session.adaptivePricing ? 'enabled' : 'disabled'],
+        ['devise encaissée', booking.currency.toUpperCase()],
+        ['devise présentée', (checkoutSession.currency || booking.currency).toUpperCase()],
+        ['taux garanti', converted ? converted.currencyConversion.fxRate : '—'],
+      ]
+        .map(([k, v]) => `<dt class="mono">${k}</dt><dd class="mono">${v}</dd>`)
+        .join('');
     }
     renderTotal(actions.getSession());
 

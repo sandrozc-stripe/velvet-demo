@@ -60,6 +60,30 @@ async function accountChecks() {
     ok('charges_enabled', 'true');
   }
 
+  // Adaptive Pricing exige que la devise des prix soit une devise de règlement
+  // du compte. C'est la seule de ses conditions qui se lise par l'API.
+  check(
+    BOOKING.currency === account.default_currency,
+    'devise des prix réglable par le compte',
+    `${BOOKING.currency.toUpperCase()} · règlement ${account.default_currency.toUpperCase()}`
+  );
+
+  // Le réglage Adaptive Pricing du Dashboard n'a pas d'API de lecture. Les
+  // sessions déjà créées le reflètent : c'est le seul signal disponible, et il
+  // est réel. S'il tombe à false, l'interrupteur de l'écran Paiement restera en
+  // euros dans les deux positions.
+  const sessions = await stripe.checkout.sessions.list({ limit: 5 });
+  const converting = sessions.data.filter((s) => s.adaptive_pricing && s.adaptive_pricing.enabled);
+  if (!sessions.data.length) {
+    warn('réglage Adaptive Pricing invérifiable', 'aucune session Checkout sur le compte — jouez /paiement une fois');
+  } else {
+    check(
+      converting.length > 0,
+      'Adaptive Pricing actif sur le compte',
+      `${converting.length}/${sessions.data.length} session(s) récente(s) en adaptive_pricing.enabled`
+    );
+  }
+
   console.log('\n3. Moyens de paiement');
   const pmc = await stripe.paymentMethodConfigurations.retrieve(PMC_ID);
   // Exactement les moyens de paiement annoncés dans le script — même liste que

@@ -43,6 +43,11 @@ const stripe = require('../lib/stripe');
         price_data: { currency: 'eur', unit_amount: 100, product_data: { name: 'Velvet — test de fumée' } },
       },
     ],
+    // Le réglage porté par l'interrupteur de l'écran Paiement. On le pose ici
+    // avec `setup_future_usage`, la combinaison exacte du parcours : c'est le
+    // contrôle le moins cher que le paramètre est bien accepté sur la version
+    // d'API épinglée, et qu'il n'entre pas en conflit avec l'enregistrement.
+    adaptive_pricing: { enabled: true },
     payment_intent_data: { setup_future_usage: 'off_session' },
     return_url: 'https://example.com/confirmation?checkout_session={CHECKOUT_SESSION_ID}',
     metadata: { velvet_smoke: 'true' },
@@ -51,6 +56,11 @@ const stripe = require('../lib/stripe');
     Boolean(session.client_secret) && session.ui_mode === 'elements',
     'session Checkout ui_mode: elements créée',
     `${session.id} · ${session.ui_mode}`
+  );
+  check(
+    Boolean(session.adaptive_pricing && session.adaptive_pricing.enabled),
+    'adaptive_pricing accepté sur la session',
+    `enabled=${Boolean(session.adaptive_pricing && session.adaptive_pricing.enabled)}`
   );
 
   const search = await stripe.paymentIntents.search({ query: 'metadata["velvet_smoke"]:"true"', limit: 1 });

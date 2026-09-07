@@ -43,10 +43,18 @@
         <div id="banner" class="alert" hidden></div>
 
         <form id="payment-form" class="card card--frame">
+          <!-- Currency Selector Element. Stripe demande de le placer juste
+               au-dessus du Payment Element : la devise choisie change les moyens
+               de paiement proposés en dessous. Monté sans condition — sans
+               `currencyOptions`, il ne rend rien. -->
+          <div id="currency-selector"></div>
+
           <div id="payment-element"></div>
 
           <button id="submit" class="btn btn--block" type="submit" disabled>
-            <span id="submit-label">Payer 75,00 €</span>
+            <!-- Aucun montant en dur : le libellé est écrit depuis la session,
+                 et la devise n'est pas connue avant qu'elle soit chargée. -->
+            <span id="submit-label">Payer</span>
           </button>
 
           <div class="pay-status" id="status"></div>
@@ -61,6 +69,23 @@
         <div class="card card--flat" data-reveal>
           <p class="eyebrow eyebrow--marked">Ce dossier suit le paiement</p>
           <dl class="dl dl--left small" id="meta-list"></dl>
+        </div>
+
+        <!-- Panneau de réglage du présentateur : il n'existe pas sur velvet.fr.
+             Il recrée la session Checkout avec ou sans Adaptive Pricing, pour
+             montrer le même trajet présenté en euros puis en livres. Pas de
+             `data-reveal` : un interrupteur ne doit pas apparaître en fondu. -->
+        <div class="card card--flat demo-panel">
+          <p class="eyebrow eyebrow--marked">Réglage de démonstration — hors parcours voyageur</p>
+          <p class="small">
+            Adaptive Pricing se règle à la création de la session Checkout&nbsp;: basculer
+            recharge l’écran sur une session neuve, avec une nouvelle référence de dossier.
+          </p>
+          <div class="grid grid--2" style="gap:var(--sp-2)" role="radiogroup" aria-label="Adaptive Pricing">
+            <button type="button" class="btn btn--toggle is-active" role="radio" aria-checked="true" data-adaptive="0">Prix en euros</button>
+            <button type="button" class="btn btn--toggle" role="radio" aria-checked="false" data-adaptive="1">Adaptive Pricing</button>
+          </div>
+          <dl class="dl dl--left small" id="adaptive-state"></dl>
         </div>
       </div>
 

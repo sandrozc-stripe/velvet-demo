@@ -73,6 +73,9 @@
             <div><span>Place</span><strong id="seat">—</strong></div>
           </div>
           <div class="total"><span>Réglé</span><span id="amount">—</span></div>
+          <!-- Ne s'affiche que si Adaptive Pricing a converti : sans conversion,
+               le billet reste exactement celui d'aujourd'hui. -->
+          <p class="micro muted flush" id="amount-note" hidden></p>
           <div class="row">
             <a class="btn btn--small" href="/espace">Gérer mon voyage</a>
             <a class="btn btn--small btn--ghost" id="receipt" href="#" target="_blank" rel="noopener" hidden>Voir le reçu</a>
@@ -173,6 +176,19 @@
     const pay = await VELVET.get(`/api/payment/${piId}`);
 
     VELVET.el('amount').textContent = VELVET.money(pay.amount, pay.currency);
+
+    // Deux devises sur un seul billet : ce que Camille a réglé, ce que Velvet
+    // encaisse. `presentmentCurrency` est absent quand aucune conversion n'a eu
+    // lieu — la ligne n'apparaît alors pas du tout.
+    if (pay.presentmentCurrency) {
+      VELVET.el('amount').textContent = VELVET.money(pay.presentmentAmount, pay.presentmentCurrency);
+      const note = VELVET.el('amount-note');
+      note.textContent =
+        `réglé en ${pay.presentmentCurrency.toUpperCase()} · encaissé ` +
+        `${VELVET.money(pay.amount, pay.currency)} par Velvet`;
+      note.hidden = false;
+    }
+
     if (pay.metadata && pay.metadata.booking_reference) {
       VELVET.el('pnr-badge').textContent = pay.metadata.booking_reference;
       setStub(pay.metadata.booking_reference);
