@@ -20,12 +20,18 @@ const stripe = require('../lib/stripe');
       amount: 100,
       currency: 'eur',
       payment_method: 'pm_card_visa',
-      payment_method_types: ['card'],
+      // Pas de `payment_method_types` : nulle part dans ce dépôt on n'énumère
+      // les moyens de paiement à la main, c'est Stripe qui les résout. Ici le
+      // moyen est fourni explicitement, donc `allow_redirects: 'never'` — sans
+      // lui, une création confirmée sans `return_url` est refusée.
+      automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
       confirm: true,
       description: 'Velvet — test de fumée',
       metadata: { velvet_smoke: 'true' },
     },
-    { idempotencyKey: 'velvet-smoke-v1' }
+    // Clé bumpée en v2 avec le passage à automatic_payment_methods : une clé
+    // d'idempotence rejouée avec des paramètres différents est refusée.
+    { idempotencyKey: 'velvet-smoke-v2' }
   );
   check(pi.status === 'succeeded', 'autorisation de 1,00 € confirmée', `${pi.id} · ${pi.status}`);
 

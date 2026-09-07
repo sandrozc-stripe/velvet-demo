@@ -56,9 +56,13 @@ suivre, sur une seule réservation, pendant vingt minutes. Annoncez le PNR à vo
 Laisser le formulaire se charger, montrer les moyens affichés.
 
 **DIRE** Le paiement reste dans l'expérience Velvet — même typographie, même vert, même
-rose. Les moyens affichés sont adaptés au pays, à la devise et à l'appareil, et Velvet les
-pilote depuis Stripe **sans retoucher le parcours**. Nommez ce qui est activé : cartes,
-Cartes Bancaires, Apple Pay, Google Pay, PayPal, Link.
+rose. Les moyens affichés sont adaptés au pays, à la devise et à l'appareil : le parcours
+n'épingle **aucune liste**, c'est Stripe qui décide, et Velvet pilote ce qui est éligible
+depuis le Dashboard **sans retoucher le code**.
+
+Décrivez ce que l'écran montre — n'énoncez pas une liste apprise par cœur. La configuration
+peut changer côté Dashboard entre la répétition et la présentation, et une liste récitée qui
+ne correspond plus à l'écran coûte plus cher que pas de liste du tout.
 
 **À dire avant qu'on le remarque :** Apple Pay ne s'affiche pas ici parce que la démo
 tourne sur `localhost` et que les portefeuilles exigent un domaine HTTPS enregistré. Il
@@ -81,10 +85,9 @@ client qui choisit sa devise. Un remboursement repart au taux d'origine. Un inte
 le Dashboard, aucune ligne de code de plus pour ouvrir un nouveau marché.
 
 ⚠️ **Ne dites pas que la conversion débloque des moyens de paiement locaux** — vérifié, c'est
-le contraire : **PayPal disparaît** de l'accordéon sous présentation en livres, et la session
-le dit (`payment_method_types` perd `paypal` quand la conversion est active). Ce que ça
-change, c'est la devise. Si quelqu'un le remarque : « PayPal n'est pas éligible à la
-présentation convertie sur ce compte » — n'improvisez pas mieux que ça. Et le panneau beige
+le contraire : **PayPal disparaît** de l'accordéon sous présentation en livres. Ce que ça
+change, c'est la devise. Si quelqu'un le remarque : « la présentation convertie n'est pas
+prise en charge par PayPal » — n'improvisez pas mieux que ça. Et le panneau beige
 est volontairement hors charte : dites-le en une phrase, « ce réglage n'existe pas sur
 velvet.fr, c'est mon interrupteur de démonstration ».
 
@@ -291,5 +294,5 @@ Puis la question qui rend la main au comité :
    sur velvet.fr.
 4. L'adresse e-mail préremplie contient `+location_gb` : c'est l'adresse de test qui simule
    la localisation du voyageur, et elle est visible au beat 07:00.
-5. En livres, la ligne PayPal n'est plus là : PayPal n'est pas éligible à la présentation
-   convertie sur ce compte. Dites-le avant qu'on compte les lignes de l'accordéon.
+5. En livres, la ligne PayPal n'est plus là : la présentation convertie n'est pas prise en
+   charge par PayPal. Dites-le avant qu'on compte les lignes de l'accordéon.

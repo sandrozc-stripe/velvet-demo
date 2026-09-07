@@ -4,7 +4,7 @@ const stripe = require('../lib/stripe');
 const { buildMetadata } = require('../lib/metadata');
 const store = require('../lib/store');
 const { generatePnr } = require('../lib/pnr');
-const { BOOKING, FARES, PMC_ID, ORIGIN } = require('../config');
+const { BOOKING, FARES, ORIGIN } = require('../config');
 
 const router = express.Router();
 
@@ -95,7 +95,15 @@ function createCheckoutSession({
     // partage cette fabrique mais ne monte pas de Currency Selector Element, or
     // Stripe exige de l'afficher dès qu'une session peut être convertie.
     adaptive_pricing: { enabled: Boolean(adaptivePricing) },
-    payment_method_configuration: PMC_ID,
+    // Aucune configuration de moyens de paiement n'est épinglée ici, et aucune
+    // liste `payment_method_types` : la session retombe sur la configuration
+    // par défaut du compte et c'est Stripe qui décide quels moyens présenter,
+    // selon le pays du voyageur, la devise et l'appareil.
+    //
+    // Épingler `pmc_…` ne changeait rien à l'écran — cette configuration *est*
+    // la configuration par défaut du compte (`is_default: true`) — mais figeait
+    // dans le code une décision qui appartient au Dashboard. `npm run pmc`
+    // continue de la piloter ; le parcours ne la nomme plus.
     // Aucune case « enregistrer ma carte » : le consentement de la
     // démonstration est porté par setup_future_usage, comme avant.
     saved_payment_method_options: { payment_method_save: 'disabled' },

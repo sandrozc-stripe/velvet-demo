@@ -186,6 +186,16 @@ de CustomerSession dans l'intégration — le réaffichage de la carte enregistr
 `customer` porté par la session. La preuve de l'enregistrement reste sur le moyen de
 paiement : `allow_redisplay: 'always'` et rattachement au client.
 
+**Aucune liste de moyens de paiement n'est épinglée dans le code.** Ni
+`payment_method_types`, ni `payment_method_configuration` : la session Checkout retombe sur la
+configuration par défaut du compte et Stripe résout les moyens à présenter selon le pays du
+voyageur, la devise et l'appareil. Le parcours a longtemps épinglé
+`pmc_1UCZPvLxBtYMYaT4g6N4JJRh` explicitement, ce qui ne changeait rien à l'écran — cette
+configuration **est** la configuration par défaut (`is_default: true`) — mais figeait dans le
+code une décision qui appartient au Dashboard. `scripts/configure-pmc.js` et
+`scripts/preflight.js` continuent de lire et d'écrire cette configuration par son
+identifiant : c'est l'outillage de préparation, pas le parcours de paiement.
+
 **Adaptive Pricing — quatre choses mesurées sur ce compte, dont trois contre-intuitives.**
 
 *Le réglage du Dashboard est déjà actif.* Les sessions Checkout de ce sandbox reviennent en
@@ -218,25 +228,29 @@ et le remboursement — qui porte ce que le voyageur a réglé. Le champ est **a
 aucune conversion n'a eu lieu, pas `null` : le billet ne teste donc pas l'égalité à `null`.
 Corollaire rassurant pour le rapprochement : `/ops` continue de compter des euros.
 
-*La liste des moyens de paiement change — dans le sens qu'on n'attend pas.* Le réflexe est
-d'annoncer que la conversion « débloque les moyens locaux ». C'est l'inverse qui se produit
-ici : **PayPal disparaît** quand la conversion est active. Mesuré des deux côtés, à état égal,
-et lisible sur la session : `payment_method_types` vaut `["card","link","paypal"]` quand
-`adaptive_pricing.enabled` est `false`, et `["card","link"]` quand il est `true` — l'accordéon
-du Payment Element suit exactement, deux lignes en euros (« Carte bancaire », « PayPal »), une
-seule sous présentation en livres. `cartes_bancaires` n'est pas concerné : il ne figure jamais
-dans `payment_method_types` (il est fusionné dans la ligne « Carte bancaire ») et Link reste
-présent, en bloc d'enregistrement en ligne. Les portefeuilles (`apple_pay`, `google_pay`)
-n'apparaissent dans aucun des deux cas — ni dans cette liste, qui ne porte que les moyens
-résolus côté serveur, ni à l'écran, faute de domaine vérifié sur `localhost`.
+*Les moyens affichés changent — dans le sens qu'on n'attend pas, et l'API ne le dit pas.* Le
+réflexe est d'annoncer que la conversion « débloque les moyens locaux ». C'est l'inverse qui se
+produit ici : **PayPal disparaît** de l'écran quand la conversion est active. Mesuré à l'écran,
+dans les deux sens, à état égal : en euros le Payment Element affiche deux lignes
+(« Carte bancaire », « PayPal »), sous présentation en livres il n'affiche que le formulaire
+carte, sans accordéon.
+
+⚠️ **Le signal est l'écran, pas la session.** `payment_method_types` vaut
+`["card","link","paypal"]` **dans les deux états** — vérifié sur les quatre combinaisons
+(conversion oui/non × configuration épinglée ou non). Cette liste porte ce que le compte rend
+éligible côté serveur ; c'est Stripe.js qui écarte ensuite PayPal, la présentation convertie
+n'étant pas prise en charge pour ce moyen. Ne concluez donc rien sur ce qui sera affiché en
+lisant la session : ouvrez la page. `cartes_bancaires` ne figure d'ailleurs dans aucune de ces
+listes — il est fusionné dans la ligne « Carte bancaire » — et les portefeuilles n'y sont pas
+non plus, faute de domaine vérifié sur `localhost`.
 
 Donc : l'effet à montrer est la devise, le sélecteur de devise et la ligne de taux garanti
 (« 1 EUR = 0,8935 GBP, frais de conversion de 4 % inclus »), pas un élargissement du choix de
-paiement. Et si quelqu'un remarque que PayPal a disparu, la réponse est que PayPal n'est pas
-éligible à la présentation convertie sur ce compte, pas que la démonstration a changé de
+paiement. Et si quelqu'un remarque que PayPal a disparu, la réponse est que la présentation
+convertie n'est pas prise en charge par PayPal, pas que la démonstration a changé de
 configuration. Pour que le basculement ouvre réellement Pay by Bank ou Klarna, il faudrait
-élargir la configuration des moyens de paiement — ce qui changerait la liste sur **tous** les
-autres beats. Écarté volontairement.
+élargir la configuration des moyens de paiement dans le Dashboard — ce qui changerait l'écran
+sur **tous** les autres beats. Écarté volontairement.
 
 Deux détails de scène : `setup_future_usage: 'off_session'` **ne supprime pas** la conversion
 (vérifié, la combinaison exacte du parcours), et le SDK formate le total en locale française,
