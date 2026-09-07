@@ -28,25 +28,52 @@ async function findOrCreateCustomer() {
   });
 }
 
-// Une CustomerSession est ce qui permet de réafficher la carte enregistrée
-// dans le Payment Element, sur cet écran comme dans l'espace voyageur.
-// L'enregistrement de la carte n'est plus soumis à une case à cocher : chaque
-// paiement carte réussi enregistre automatiquement le moyen de paiement
-// (setup_future_usage sur le PaymentIntent), pour que la démonstration
-// retrouve toujours la carte de Camille au paiement suivant.
-function createCustomerSession(customerId) {
-  return stripe.customerSessions.create({
+// Toute vente de la démonstration passe par une session Checkout en
+// `ui_mode: 'elements'` : c'est elle qui porte le montant, le client, les
+// métadonnées du dossier et l'URL de retour, et c'est son client_secret qui
+// initialise le Payment Element côté navigateur.
+//
+// Deux points valent d'être notés, parce qu'ils remplacent la CustomerSession
+// de l'intégration Payment Intents :
+//   - la carte enregistrée de Camille est réaffichée du seul fait que la
+//     session porte un `customer` (le navigateur laisse `savedPaymentMethod`
+//     en réglage automatique) ;
+//   - l'enregistrement reste sans case à cocher — `payment_method_save` est
+//     désactivé et c'est `payment_intent_data.setup_future_usage` qui
+//     enregistre la carte à chaque paiement réussi.
+function createCheckoutSession({ customerId, amount, productName, description, statementSuffix, metadata }) {
+  return stripe.checkout.sessions.create({
+    ui_mode: 'elements',
+    mode: 'payment',
     customer: customerId,
-    components: {
-      payment_element: {
-        enabled: true,
-        features: {
-          payment_method_redisplay: 'enabled',
-          payment_method_save: 'disabled',
-          payment_method_remove: 'enabled',
+    line_items: [
+      {
+        quantity: 1,
+        price_data: {
+          currency: BOOKING.currency,
+          unit_amount: amount,
+          product_data: { name: productName, description },
         },
       },
+    ],
+    payment_method_configuration: PMC_ID,
+    // Aucune case « enregistrer ma carte » : le consentement de la
+    // démonstration est porté par setup_future_usage, comme avant.
+    saved_payment_method_options: { payment_method_save: 'disabled' },
+    payment_intent_data: {
+      setup_future_usage: 'off_session',
+      statement_descriptor_suffix: statementSuffix,
+      description,
+      receipt_email: BOOKING.passenger.email,
+      metadata,
     },
+    // Le même bloc de métadonnées sur la session : le dossier est
+    // retrouvable dès `checkout.session.completed`, sans attendre le
+    // PaymentIntent.
+    metadata,
+    // `redirect: 'if_required'` garde les cartes sur velvet.fr ; cette URL ne
+    // sert qu'aux moyens de paiement qui redirigent réellement.
+    return_url: `${ORIGIN}/confirmation?checkout_session={CHECKOUT_SESSION_ID}`,
   });
 }
 
@@ -59,10 +86,10 @@ function freshPnr() {
 }
 
 // POST /api/booking — crée le dossier de paiement du trajet Paris -> Bordeaux.
-// Appelé à chaque chargement de l'écran Paiement : on repart toujours d'un
-// PaymentIntent neuf sur un PNR neuf, pour ne jamais réutiliser une intention
-// déjà confirmée pendant les répétitions, et pour que le Dashboard Stripe
-// filtré sur ce PNR ne montre que cette réservation.
+// Appelé à chaque chargement de l'écran Paiement : on repart toujours d'une
+// session Checkout neuve sur un PNR neuf, pour ne jamais réutiliser une session
+// déjà réglée pendant les répétitions, et pour que le Dashboard Stripe filtré
+// sur ce PNR ne montre que cette réservation.
 router.post('/booking', async (req, res, next) => {
   try {
     const fareKey = FARES[req.body && req.body.tripType] ? req.body.tripType : 'aller_simple';
@@ -71,16 +98,12 @@ router.post('/booking', async (req, res, next) => {
 
     const customer = await findOrCreateCustomer();
 
-    const paymentIntent = await stripe.paymentIntents.create({
+    const session = await createCheckoutSession({
+      customerId: customer.id,
       amount: fare.amount,
-      currency: BOOKING.currency,
-      customer: customer.id,
-      automatic_payment_methods: { enabled: true },
-      payment_method_configuration: PMC_ID,
-      payment_method_options: { card: { setup_future_usage: 'off_session' } },
-      statement_descriptor_suffix: 'VELVET PARBDX',
+      productName: `Velvet — ${fare.label}`,
       description: `Velvet — ${fare.label} — ${BOOKING.origin} → ${BOOKING.destination} — ${BOOKING.travelDate} ${BOOKING.departure}`,
-      receipt_email: BOOKING.passenger.email,
+      statementSuffix: 'VELVET PARBDX',
       metadata: buildMetadata({
         booking_reference: pnr,
         trip_type: fareKey,
@@ -89,11 +112,13 @@ router.post('/booking', async (req, res, next) => {
       }),
     });
 
-    const customerSession = await createCustomerSession(customer.id);
-
+    // Le PaymentIntent n'existe pas encore : la session Checkout le crée à la
+    // confirmation. Le dossier suit donc la session, et l'identifiant du
+    // paiement arrive par `checkout.session.completed` ou par la lecture de la
+    // session sur l'écran de confirmation.
     store.upsert(pnr, {
       customerId: customer.id,
-      paymentIntentId: paymentIntent.id,
+      checkoutSessionId: session.id,
       amount: fare.amount,
       tripType: fareKey,
       fareLabel: fare.label,
@@ -104,15 +129,14 @@ router.post('/booking', async (req, res, next) => {
     });
 
     res.json({
-      clientSecret: paymentIntent.client_secret,
-      customerSessionClientSecret: customerSession.client_secret,
-      paymentIntentId: paymentIntent.id,
+      clientSecret: session.client_secret,
+      checkoutSessionId: session.id,
       customerId: customer.id,
       pnr,
       tripType: fareKey,
       fareLabel: fare.label,
       amount: fare.amount,
-      returnUrl: `${ORIGIN}/confirmation`,
+      returnUrl: `${ORIGIN}/confirmation?checkout_session=${session.id}`,
     });
   } catch (err) {
     next(err);
@@ -152,6 +176,35 @@ router.get('/booking/:pnr', async (req, res, next) => {
     const dossier = store.get(req.params.pnr);
     if (!dossier) return res.status(404).json({ error: 'Dossier inconnu' });
     res.json(dossier);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/checkout/session/:id — état d'une session Checkout, interrogé par
+// l'écran de confirmation. C'est ici que le dossier apprend l'identifiant du
+// PaymentIntent que la session vient de créer : sans cette lecture, une
+// démonstration jouée sans « npm run listen » n'aurait aucun paiement à
+// rembourser depuis l'espace voyageur.
+router.get('/checkout/session/:id', async (req, res, next) => {
+  try {
+    const session = await stripe.checkout.sessions.retrieve(req.params.id, {
+      expand: ['payment_intent'],
+    });
+    store.linkCheckoutSession(session);
+
+    const pi = session.payment_intent && typeof session.payment_intent === 'object' ? session.payment_intent : null;
+    res.json({
+      id: session.id,
+      status: session.status,
+      paymentStatus: session.payment_status,
+      amountTotal: session.amount_total,
+      currency: session.currency,
+      metadata: session.metadata,
+      paymentIntentId: pi ? pi.id : typeof session.payment_intent === 'string' ? session.payment_intent : null,
+      paymentIntentStatus: pi ? pi.status : null,
+      bookingReference: (session.metadata && session.metadata.booking_reference) || null,
+    });
   } catch (err) {
     next(err);
   }
@@ -199,4 +252,4 @@ router.get('/payment/:id', async (req, res, next) => {
   }
 });
 
-module.exports = { router, findOrCreateCustomer, createCustomerSession };
+module.exports = { router, findOrCreateCustomer, createCheckoutSession };

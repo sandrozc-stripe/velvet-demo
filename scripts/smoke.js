@@ -29,11 +29,29 @@ const stripe = require('../lib/stripe');
   );
   check(pi.status === 'succeeded', 'autorisation de 1,00 € confirmée', `${pi.id} · ${pi.status}`);
 
-  const cs = await stripe.customerSessions.create({
-    customer: (await stripe.customers.create({ email: 'velvet.smoke@example.com' })).id,
-    components: { payment_element: { enabled: true, features: { payment_method_save: 'enabled', payment_method_save_usage: 'off_session', payment_method_redisplay: 'enabled', payment_method_remove: 'enabled' } } },
+  // Le parcours de paiement repose entièrement sur une session Checkout en
+  // `ui_mode: 'elements'`, qui exige la version d'API épinglée dans
+  // lib/stripe.js : ce contrôle échoue bruyamment si elle est dépinglée.
+  const customer = await stripe.customers.create({ email: 'velvet.smoke@example.com' });
+  const session = await stripe.checkout.sessions.create({
+    ui_mode: 'elements',
+    mode: 'payment',
+    customer: customer.id,
+    line_items: [
+      {
+        quantity: 1,
+        price_data: { currency: 'eur', unit_amount: 100, product_data: { name: 'Velvet — test de fumée' } },
+      },
+    ],
+    payment_intent_data: { setup_future_usage: 'off_session' },
+    return_url: 'https://example.com/confirmation?checkout_session={CHECKOUT_SESSION_ID}',
+    metadata: { velvet_smoke: 'true' },
   });
-  check(Boolean(cs.client_secret), 'CustomerSession créée', 'case « enregistrer » disponible');
+  check(
+    Boolean(session.client_secret) && session.ui_mode === 'elements',
+    'session Checkout ui_mode: elements créée',
+    `${session.id} · ${session.ui_mode}`
+  );
 
   const search = await stripe.paymentIntents.search({ query: 'metadata["velvet_smoke"]:"true"', limit: 1 });
   check(Array.isArray(search.data), 'recherche PaymentIntent disponible', `${search.data.length} résultat(s)`);

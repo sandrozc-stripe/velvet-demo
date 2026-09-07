@@ -20,8 +20,8 @@ Bordeaux Saint-Jean, 15 janvier 2028 08:12, Velvet Flex, 75,00 €, commande Sqi
 npm run demo:start
 ```
 
-Remet d'abord le dossier de démonstration à zéro (`npm run reset` — sinon une carte ou une
-intention laissée par la répétition précédente réapparaît dès l'ouverture de `/paiement`,
+Remet d'abord le dossier de démonstration à zéro (`npm run reset` — sinon la carte
+enregistrée à la répétition précédente réapparaît dès l'ouverture de `/paiement`,
 avant même le premier refus du beat 04:30). Ouvre ensuite les trois terminaux ci-dessous
 dans des fenêtres Terminal.app séparées, récupère le `whsec_…` généré par `stripe listen`
 et l'écrit lui-même dans `.env` **avant** de démarrer le serveur — l'ordre qui compte,
@@ -97,7 +97,7 @@ et sans conséquence :
 | URL | Rôle | Moment |
 |---|---|---|
 | `/` | Réservation Paris → Bordeaux, 75 € | 02:00 |
-| `/paiement` | Payment Element, consentement d'enregistrement, 3-D Secure | 04:30–10:00 |
+| `/paiement` | Payment Element sur session Checkout (`ui_mode: 'elements'`), 3-D Secure | 04:30–10:00 |
 | `/confirmation` | Billet confirmé, PNR, données opérateur repliables | 10:00 |
 | `/espace` | Carte enregistrée, bagage 15 € hors session | 10:00–12:30 |
 | `/bord` | QR code de régularisation, session unique par PNR | 18:30 |
@@ -179,18 +179,20 @@ chercher en direct.
 S'il gêne malgré tout, deux sorties : une adresse que Link ne reconnaît pas, ou retirer
 `link` de la liste `ON` dans `scripts/configure-pmc.js` puis relancer `npm run pmc`.
 
-**`setup_future_usage` reste `null`** sur l'intention de paiement, même quand la carte est
-correctement enregistrée. C'est la CustomerSession qui porte le consentement, via
-`payment_method_save_usage`. La preuve de l'enregistrement est sur le moyen de paiement :
-`allow_redisplay: 'always'` et rattachement au client. Ne cherchez pas
-`setup_future_usage` devant le comité, vous ne le trouverez pas.
+**`setup_future_usage` vaut `off_session`** sur l'intention de paiement, sans case à cocher
+à l'écran : c'est `payment_intent_data.setup_future_usage` sur la session Checkout qui le
+pose, et `saved_payment_method_options.payment_method_save` reste `disabled`. Il n'y a plus
+de CustomerSession dans l'intégration — le réaffichage de la carte enregistrée découle du
+`customer` porté par la session. La preuve de l'enregistrement reste sur le moyen de
+paiement : `allow_redisplay: 'always'` et rattachement au client.
 
 **Le délai d'indexation de la recherche.** `/v1/payment_intents/search` met 45 à 60
 secondes à indexer un paiement neuf. `paymentIntents.list({customer})` est immédiat. Le
 créneau naturel de l'agenda entre 10:00 et 12:30 absorbe ce délai ; si la recherche revient
 vide, collez l'identifiant du PaymentIntent.
 
-**Le flux à bord utilise un vrai Payment Link, pas une session Checkout.** Un Payment Link
+**Le flux à bord utilise un vrai Payment Link, pas une session Checkout en `ui_mode:
+'elements'`** comme les écrans `/paiement` et `/espace`. Un Payment Link
 n'accepte pas de `success_url` : `after_completion.type = 'hosted_confirmation'` garde le
 voyageur sur le domaine `checkout.stripe.com` jusqu'à la confirmation, donc son téléphone
 n'a jamais besoin de joindre `localhost`. La contrepartie : pas de `customer` rattaché (la

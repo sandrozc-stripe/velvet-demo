@@ -87,10 +87,10 @@
         </div>
 
         <div class="card">
-          <p class="eyebrow">Intention de paiement</p>
-          <p class="mono flush" id="pi-id" style="word-break:break-all">—</p>
+          <p class="eyebrow">Session Checkout</p>
+          <p class="mono flush" id="cs-id" style="word-break:break-all">—</p>
           <p class="micro muted" style="margin:.6rem 0 0">
-            Cet identifiant ne change pas en cas de refus : la reprise se fait dans le même dossier.
+            Cet identifiant ne change pas en cas de refus : la session reste ouverte et la reprise se fait dans le même dossier.
           </p>
         </div>
       </aside>
@@ -107,7 +107,10 @@
   </div>
 </footer>
 
-<script src="https://js.stripe.com/v3/"></script>
+<!-- Build « dahlia » de Stripe.js : c'est celui qui expose
+     initCheckoutElementsSdk, le point d'entrée des sessions Checkout en
+     ui_mode: 'elements'. -->
+<script src="https://js.stripe.com/dahlia/stripe.js"></script>
 <script src="/js/common.js"></script>
 <script src="/js/paiement.js"></script>
 </body>

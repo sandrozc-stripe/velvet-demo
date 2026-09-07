@@ -47,6 +47,12 @@ const FARES = {
 
 const PMC_ID = process.env.STRIPE_PMC_ID || 'pmc_1UCZPvLxBtYMYaT4g6N4JJRh';
 
+// Version d'API v1 exigée par `ui_mode: 'elements'` sur les sessions Checkout.
+// En dessous, l'API refuse la création : « In order to use ui_mode: elements,
+// you must upgrade to Stripe API version 2026-03-25.dahlia ». C'est donc une
+// dépendance dure de l'intégration, pas un réglage cosmétique.
+const API_VERSION = process.env.STRIPE_API_VERSION || '2026-03-25.dahlia';
+
 // Version de l'API v2 utilisée uniquement pour l'aperçu Workflows. Valeur
 // relevée dans l'onglet « API call » du déclencheur à la demande, dans le
 // Dashboard — c'est la seule source de vérité pour une API en aperçu.
@@ -60,6 +66,7 @@ module.exports = {
   ONBOARD,
   FARES,
   PMC_ID,
+  API_VERSION,
   WORKFLOWS_API_VERSION,
   SECRET_KEY: process.env.STRIPE_SECRET_KEY,
   PUBLIC_KEY: process.env.STRIPE_PUBLIC_KEY,
