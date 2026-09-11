@@ -141,12 +141,12 @@ async function demoBookingChecks() {
 
   // La carte réaffichable dans « Mon espace » doit exister et porter le bon
   // consentement, sinon l'écran D affiche un formulaire vide.
-  const customers = await stripe.customers.list({ email: BOOKING.passenger.email, limit: 1 });
-  if (!customers.data.length) {
+  const customer = await stripe.customers.retrieve(BOOKING.passenger.customerId);
+  if (customer.deleted) {
     warn('client de démonstration absent', 'sera créé au premier chargement de /paiement');
     return;
   }
-  const pms = await stripe.paymentMethods.list({ customer: customers.data[0].id, type: 'card', limit: 10 });
+  const pms = await stripe.paymentMethods.list({ customer: customer.id, type: 'card', limit: 10 });
   const redisplayable = pms.data.filter((pm) => pm.allow_redisplay === 'always');
   if (redisplayable.length) {
     ok('carte réaffichable pour « Mon espace »', redisplayable.map((pm) => `${pm.card.brand} ••${pm.card.last4}`).join(', '));

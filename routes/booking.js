@@ -11,10 +11,9 @@ const router = express.Router();
 // Réutilise le client s'il existe déjà : le passager de la démonstration est
 // toujours le même, et on veut voir son historique s'accumuler.
 async function findOrCreateCustomer() {
-  const found = await stripe.customers.list({ email: BOOKING.passenger.email, limit: 1 });
-  if (found.data.length) {
-    const customer = found.data[0];
+  const customer = await stripe.customers.retrieve(BOOKING.passenger.customerId);
 
+  if (!customer.deleted) {
     // Le client « +location_gb » du bac à sable a été créé hors de ce parcours,
     // donc sans métadonnées. Or l'espace voyageur retombe sur l'adresse e-mail
     // quand le numéro de fidélité manque : il projetterait alors le suffixe

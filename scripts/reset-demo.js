@@ -19,10 +19,9 @@ const ARCHIVE = 'VLT-REPETITION-ARCHIVE';
 (async () => {
   console.log('\n──── Remise à zéro du dossier de démonstration ────\n');
 
-  const customers = await stripe.customers.list({ email: BOOKING.passenger.email, limit: 1 });
-  const customer = customers.data[0];
+  const customer = await stripe.customers.retrieve(BOOKING.passenger.customerId);
 
-  if (!customer) {
+  if (customer.deleted) {
     console.log('Aucun client de démonstration : rien à nettoyer.\n');
     return;
   }
