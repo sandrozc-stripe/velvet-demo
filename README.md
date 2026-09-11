@@ -97,7 +97,7 @@ et sans conséquence :
 | URL | Rôle | Moment |
 |---|---|---|
 | `/` | Réservation Paris → Bordeaux, 75 € | 02:00 |
-| `/paiement` | Payment Element sur session Checkout (`ui_mode: 'elements'`), 3-D Secure | 04:30–10:00 |
+| `/paiement` | Payment Element sur session Checkout (`ui_mode: 'elements'`), 3-D Secure, interrupteur Adaptive Pricing | 02:00–10:00 |
 | `/confirmation` | Billet confirmé, PNR, données opérateur repliables | 10:00 |
 | `/espace` | Carte enregistrée, bagage 15 € hors session | 10:00–12:30 |
 | `/bord` | QR code de régularisation, session unique par PNR | 18:30 |
@@ -185,6 +185,77 @@ pose, et `saved_payment_method_options.payment_method_save` reste `disabled`. Il
 de CustomerSession dans l'intégration — le réaffichage de la carte enregistrée découle du
 `customer` porté par la session. La preuve de l'enregistrement reste sur le moyen de
 paiement : `allow_redisplay: 'always'` et rattachement au client.
+
+**Aucune liste de moyens de paiement n'est épinglée dans le code.** Ni
+`payment_method_types`, ni `payment_method_configuration` : la session Checkout retombe sur la
+configuration par défaut du compte et Stripe résout les moyens à présenter selon le pays du
+voyageur, la devise et l'appareil. Le parcours a longtemps épinglé
+`pmc_1UCZPvLxBtYMYaT4g6N4JJRh` explicitement, ce qui ne changeait rien à l'écran — cette
+configuration **est** la configuration par défaut (`is_default: true`) — mais figeait dans le
+code une décision qui appartient au Dashboard. `scripts/configure-pmc.js` et
+`scripts/preflight.js` continuent de lire et d'écrire cette configuration par son
+identifiant : c'est l'outillage de préparation, pas le parcours de paiement.
+
+**Adaptive Pricing — quatre choses mesurées sur ce compte, dont trois contre-intuitives.**
+
+*Le réglage du Dashboard est déjà actif.* Les sessions Checkout de ce sandbox reviennent en
+`adaptive_pricing.enabled = true` alors que le code ne demandait rien. Le paramètre de
+`routes/booking.js` n'ouvre donc pas la fonctionnalité — il rend l'état **désactivé**
+démontrable au lieu de le laisser hériter du compte. C'est pour cela qu'il est toujours
+transmis, jamais omis, dans les deux positions de l'interrupteur.
+
+*Le suffixe d'e-mail attend un code pays ISO 3166 alpha-2, et « uk » n'en est pas un.*
+Mesuré : `+location_uk` et `+location_UK` renvoient une session **sans aucune option de
+devise** — donc un écran en euros avec l'interrupteur en position « marche », la panne
+silencieuse. `+location_gb` et `+location_GB` donnent tous deux 67,01 £ ; `+location_JP`
+donne 14 019 ¥. La casse est indifférente, le code ne l'est pas. Le client de démonstration
+`cus_VD2KkdA6Bs9Sz8` porte donc `camille.martin+location_gb@example.com` : changer
+`config.js` sans changer l'adresse du client ferait naître un second client sans carte
+enregistrée, et le beat 10:00 s'effondrerait.
+
+⚠️ **Le suffixe est projeté.** Vérifié à l'écran : le bloc Link du formulaire de carte
+préremplit `camille.martin+location_gb@example.com`, et l'adresse ressort aussi sur le reçu
+Stripe et dans les coordonnées de facturation du moyen de paiement enregistré. C'est
+exactement le champ que l'on montre en gros plan au beat 07:00. Prenez-le de front en une
+phrase — « c'est l'adresse de test qui simule la localisation du voyageur » — ou repassez le
+client sur une adresse propre et renoncez au beat Adaptive Pricing : les deux ne peuvent pas
+être vrais en même temps sur le même client.
+
+*La session vue par l'API reste en euros.* `currency: eur`, `amount_total: 7500`, quelle que
+soit la devise présentée : `currencyOptions` n'existe que sur l'objet de session **côté
+navigateur**, et c'est `presentment_details` — sur la session, le PaymentIntent, le paiement
+et le remboursement — qui porte ce que le voyageur a réglé. Le champ est **absent** quand
+aucune conversion n'a eu lieu, pas `null` : le billet ne teste donc pas l'égalité à `null`.
+Corollaire rassurant pour le rapprochement : `/ops` continue de compter des euros.
+
+*Les moyens affichés changent — dans le sens qu'on n'attend pas, et l'API ne le dit pas.* Le
+réflexe est d'annoncer que la conversion « débloque les moyens locaux ». C'est l'inverse qui se
+produit ici : **PayPal disparaît** de l'écran quand la conversion est active. Mesuré à l'écran,
+dans les deux sens, à état égal : en euros le Payment Element affiche deux lignes
+(« Carte bancaire », « PayPal »), sous présentation en livres il n'affiche que le formulaire
+carte, sans accordéon.
+
+⚠️ **Le signal est l'écran, pas la session.** `payment_method_types` vaut
+`["card","link","paypal"]` **dans les deux états** — vérifié sur les quatre combinaisons
+(conversion oui/non × configuration épinglée ou non). Cette liste porte ce que le compte rend
+éligible côté serveur ; c'est Stripe.js qui écarte ensuite PayPal, la présentation convertie
+n'étant pas prise en charge pour ce moyen. Ne concluez donc rien sur ce qui sera affiché en
+lisant la session : ouvrez la page. `cartes_bancaires` ne figure d'ailleurs dans aucune de ces
+listes — il est fusionné dans la ligne « Carte bancaire » — et les portefeuilles n'y sont pas
+non plus, faute de domaine vérifié sur `localhost`.
+
+Donc : l'effet à montrer est la devise, le sélecteur de devise et la ligne de taux garanti
+(« 1 EUR = 0,8935 GBP, frais de conversion de 4 % inclus »), pas un élargissement du choix de
+paiement. Et si quelqu'un remarque que PayPal a disparu, la réponse est que la présentation
+convertie n'est pas prise en charge par PayPal, pas que la démonstration a changé de
+configuration. Pour que le basculement ouvre réellement Pay by Bank ou Klarna, il faudrait
+élargir la configuration des moyens de paiement dans le Dashboard — ce qui changerait l'écran
+sur **tous** les autres beats. Écarté volontairement.
+
+Deux détails de scène : `setup_future_usage: 'off_session'` **ne supprime pas** la conversion
+(vérifié, la combinaison exacte du parcours), et le SDK formate le total en locale française,
+ce qui donne « 67,01 £GB » et non « 67,01 £ » — c'est le formatage de Stripe, lu sur la
+session, et le corriger à la main reviendrait à recalculer un montant à l'écran.
 
 **Le délai d'indexation de la recherche.** `/v1/payment_intents/search` met 45 à 60
 secondes à indexer un paiement neuf. `paymentIntents.list({customer})` est immédiat. Le

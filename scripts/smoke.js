@@ -20,12 +20,18 @@ const stripe = require('../lib/stripe');
       amount: 100,
       currency: 'eur',
       payment_method: 'pm_card_visa',
-      payment_method_types: ['card'],
+      // Pas de `payment_method_types` : nulle part dans ce dépôt on n'énumère
+      // les moyens de paiement à la main, c'est Stripe qui les résout. Ici le
+      // moyen est fourni explicitement, donc `allow_redirects: 'never'` — sans
+      // lui, une création confirmée sans `return_url` est refusée.
+      automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
       confirm: true,
       description: 'Velvet — test de fumée',
       metadata: { velvet_smoke: 'true' },
     },
-    { idempotencyKey: 'velvet-smoke-v1' }
+    // Clé bumpée en v2 avec le passage à automatic_payment_methods : une clé
+    // d'idempotence rejouée avec des paramètres différents est refusée.
+    { idempotencyKey: 'velvet-smoke-v2' }
   );
   check(pi.status === 'succeeded', 'autorisation de 1,00 € confirmée', `${pi.id} · ${pi.status}`);
 
@@ -43,6 +49,11 @@ const stripe = require('../lib/stripe');
         price_data: { currency: 'eur', unit_amount: 100, product_data: { name: 'Velvet — test de fumée' } },
       },
     ],
+    // Le réglage porté par l'interrupteur de l'écran Paiement. On le pose ici
+    // avec `setup_future_usage`, la combinaison exacte du parcours : c'est le
+    // contrôle le moins cher que le paramètre est bien accepté sur la version
+    // d'API épinglée, et qu'il n'entre pas en conflit avec l'enregistrement.
+    adaptive_pricing: { enabled: true },
     payment_intent_data: { setup_future_usage: 'off_session' },
     return_url: 'https://example.com/confirmation?checkout_session={CHECKOUT_SESSION_ID}',
     metadata: { velvet_smoke: 'true' },
@@ -51,6 +62,11 @@ const stripe = require('../lib/stripe');
     Boolean(session.client_secret) && session.ui_mode === 'elements',
     'session Checkout ui_mode: elements créée',
     `${session.id} · ${session.ui_mode}`
+  );
+  check(
+    Boolean(session.adaptive_pricing && session.adaptive_pricing.enabled),
+    'adaptive_pricing accepté sur la session',
+    `enabled=${Boolean(session.adaptive_pricing && session.adaptive_pricing.enabled)}`
   );
 
   const search = await stripe.paymentIntents.search({ query: 'metadata["velvet_smoke"]:"true"', limit: 1 });

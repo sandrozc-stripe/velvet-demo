@@ -261,11 +261,19 @@ function metadataFor(b) {
   const { errors: pErrors } = await pool(plan, async (item) => {
     const b = booking(item.i);
     const customer = customers[item.i % customers.length];
-    const key = `velvet-${SEED_VERSION}-pi-${item.kind}-${item.i}`;
+    // Clé des intentions bumpée en `pi2` avec le passage à
+    // automatic_payment_methods : une clé d'idempotence rejouée avec des
+    // paramètres différents est refusée. Les clés des clients ne bougent pas —
+    // leurs paramètres sont inchangés, et un rejeu ne doit pas les dupliquer.
+    const key = `velvet-${SEED_VERSION}-pi2-${item.kind}-${item.i}`;
     const base = {
       amount: b.amount,
       currency: 'eur',
-      payment_method_types: ['card'],
+      // Pas de `payment_method_types` : aucune liste de moyens de paiement
+      // n'est écrite en dur dans ce dépôt. Le moyen étant fourni à la
+      // confirmation, les redirections sont interdites — sinon l'API exige une
+      // `return_url` qu'un jeu de données n'a pas.
+      automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
       confirm: true,
       description: `Velvet — ${b.route.from} → ${b.route.to} — ${b.travel_date}`,
       statement_descriptor_suffix: `VELVET ${b.route.code.replace('-', '')}`.slice(0, 22),

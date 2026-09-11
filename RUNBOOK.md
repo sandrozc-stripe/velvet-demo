@@ -20,13 +20,21 @@ go/dev
 1. Terminal 1 : `npm run listen` → copier le `whsec_…` dans `.env`. **Laisser ouvert.**
 2. Terminal 2 : `npm start`
 3. Terminal 3 : `npm run preflight` → **zéro blocage**, 2 avertissements attendus.
-4. `npm run reset` si vous avez répété juste avant.
-5. Onglets, dans cet ordre : slide d'ouverture · `/` · `/espace` · `/bord` · `/ops` ·
+4. `npm run reset` si vous avez répété juste avant. **`reset` nettoie par client** : si vous
+   changez l'adresse de `config.js` (celle qui simule le pays du voyageur pour Adaptive
+   Pricing), lancez `reset` **avant** de la changer, sinon les paiements de répétition restent
+   accrochés à l'ancien client sans plus aucun moyen de les archiver.
+5. Une fois `/paiement` chargé : vérifier que l'interrupteur **Adaptive Pricing**, en haut à
+   gauche de l'écran, donne bien un total en livres (~**67 £**), puis le remettre sur arrêt.
+   C'est le seul beat qui dépend d'un service de change en direct, et le taux bouge d'une
+   répétition à l'autre — ne citez pas de centimes appris par cœur.
+6. Onglets, dans cet ordre : slide d'ouverture · `/` · `/espace` · `/bord` · `/ops` ·
    Dashboard moyens de paiement · Dashboard paiements/recherche · Dashboard Radar → Rules.
-6. **`/ops` ouvert dès maintenant** : il accumule les événements, il ne démarrera pas vide.
-7. Notifications coupées, gestionnaire de mots de passe coupé, autofill coupé.
-8. Téléphone : 4G activée (pas le Wi-Fi de la salle), luminosité à fond.
-9. Faire défiler `/paiement` jusqu'au bouton « Payer » une fois, pour savoir où il est.
+7. **`/ops` ouvert dès maintenant** : il accumule les événements, il ne démarrera pas vide.
+8. Notifications coupées, gestionnaire de mots de passe coupé, autofill coupé.
+9. Téléphone : 4G activée (pas le Wi-Fi de la salle), luminosité à fond.
+10. Faire défiler `/paiement` jusqu'au bouton « Payer » une fois, pour savoir où il est.
+    L'interrupteur, lui, est en haut de l'écran : il reste atteignable sans défiler.
 
 ---
 
@@ -49,17 +57,49 @@ suivre, sur une seule réservation, pendant vingt minutes. Annoncez le PNR à vo
 Laisser le formulaire se charger, montrer les moyens affichés.
 
 **DIRE** Le paiement reste dans l'expérience Velvet — même typographie, même vert, même
-rose. Les moyens affichés sont adaptés au pays, à la devise et à l'appareil, et Velvet les
-pilote depuis Stripe **sans retoucher le parcours**. Nommez ce qui est activé : cartes,
-Cartes Bancaires, Apple Pay, Google Pay, PayPal, Link.
+rose. Les moyens affichés sont adaptés au pays, à la devise et à l'appareil : le parcours
+n'épingle **aucune liste**, c'est Stripe qui décide, et Velvet pilote ce qui est éligible
+depuis le Dashboard **sans retoucher le code**.
+
+Décrivez ce que l'écran montre — n'énoncez pas une liste apprise par cœur. La configuration
+peut changer côté Dashboard entre la répétition et la présentation, et une liste récitée qui
+ne correspond plus à l'écran coûte plus cher que pas de liste du tout.
 
 **À dire avant qu'on le remarque :** Apple Pay ne s'affiche pas ici parce que la démo
 tourne sur `localhost` et que les portefeuilles exigent un domaine HTTPS enregistré. Il
 apparaîtra sur la page hébergée du beat à bord, dans quinze minutes. Sur Wero : validation
 au cas par cas, en aperçu — ne promettez rien de plus.
 
-**SI ÇA CASSE** Le formulaire ne charge pas → basculez sur l'onglet Dashboard « moyens de
-paiement » et racontez la configuration depuis là.
+**FAIRE (Adaptive Pricing, 40 secondes)** En **haut à gauche** de l'écran, l'interrupteur
+**Adaptive Pricing** → cliquer. Le rail passe au rose et l'écran se recharge sur une session
+neuve. Pointer, dans cet ordre : le **sélecteur de devise** qui apparaît au-dessus du
+formulaire, la ligne **« 1 EUR = 0,89 GBP, frais de conversion de 4 % inclus »**, puis le
+total et le bouton passés en livres (~**67 £** — le taux bouge, lisez ce qui est à l'écran).
+
+**DIRE** Même trajet, même prix pour Velvet : 75 €. Ce que voit ce voyageur-là, parce qu'il
+est au Royaume-Uni, c'est **son prix dans sa devise**, taux garanti, et il garde le choix de
+payer en euros — le sélecteur est à lui. Ce qui compte pour le comité : **Velvet encaisse
+toujours des euros**, il n'y a pas de nouveau compte bancaire à ouvrir, pas de risque de
+change à porter, et **aucun coût pour Velvet** — les 2 à 4 % de conversion sont portés par le
+client qui choisit sa devise. Un remboursement repart au taux d'origine. Un interrupteur dans
+le Dashboard, aucune ligne de code de plus pour ouvrir un nouveau marché.
+
+⚠️ **Ne dites pas que la conversion débloque des moyens de paiement locaux** — vérifié, c'est
+le contraire : **PayPal disparaît** de l'accordéon sous présentation en livres. Ce que ça
+change, c'est la devise. Si quelqu'un le remarque : « la présentation convertie n'est pas
+prise en charge par PayPal » — n'improvisez pas mieux que ça. Et l'interrupteur n'existe pas
+sur velvet.fr : dites-le en une phrase, « c'est mon interrupteur de démonstration », avant
+qu'on le prenne pour une fonctionnalité du site.
+
+**FAIRE** Remettre l'interrupteur sur **arrêt** avant d'enchaîner : les beats 04:30 et 07:00
+sont répétés en euros.
+
+**SI ÇA CASSE** Le total reste en euros avec l'interrupteur en position « marche » → c'est
+l'adresse du client qui ne simule plus le Royaume-Uni (il faut `+location_gb`, voir README).
+Ne cherchez pas en direct : remettez l'interrupteur sur **arrêt** et
+enchaînez, le parcours répété est celui en euros. Le formulaire ne charge pas du tout →
+basculez sur l'onglet Dashboard « moyens de paiement » et racontez la configuration depuis
+là.
 
 ---
 
@@ -238,13 +278,21 @@ Puis la question qui rend la main au comité :
 
 ---
 
-## Les trois phrases à ne pas prononcer
+## Les phrases à ne pas prononcer
 
 1. « Radar a demandé l'authentification » sur le billet à 75 € — c'est l'intégration.
 2. « Stripe envoie un événement quand le workflow écrit » — non, la console relit.
 3. « Voici votre commission » — c'est une commission simulée de test.
+4. « La conversion fait apparaître les moyens de paiement locaux » — vérifié, c'est
+   l'inverse : PayPal disparaît sous présentation en livres. Ce qui change, c'est la devise.
 
-## Les trois choses à dire avant qu'on les remarque
+## Les choses à dire avant qu'on les remarque
 
 1. Apple Pay absent sur `localhost`, présent sur la page hébergée à 18:30.
 2. « Velvet sandbox » dans la case de consentement, si le compte n'est pas activé d'ici là.
+3. L'interrupteur en haut à gauche de `/paiement` est mon interrupteur de démonstration — il
+   n'existe pas sur velvet.fr.
+4. L'adresse e-mail préremplie contient `+location_gb` : c'est l'adresse de test qui simule
+   la localisation du voyageur, et elle est visible au beat 07:00.
+5. En livres, la ligne PayPal n'est plus là : la présentation convertie n'est pas prise en
+   charge par PayPal. Dites-le avant qu'on compte les lignes de l'accordéon.

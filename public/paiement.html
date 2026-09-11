@@ -23,6 +23,16 @@
 <section class="section">
   <div class="wrap">
 
+    <!-- Interrupteur du présentateur, en haut à gauche de l'écran : il n'existe
+         pas sur velvet.fr. Basculer recrée la session Checkout avec ou sans
+         Adaptive Pricing — le réglage se pose à la création, donc l'écran repart
+         d'une session neuve. Pas de `data-reveal` : un interrupteur ne doit pas
+         apparaître en fondu. -->
+    <button type="button" class="switch" id="adaptive-toggle" role="switch" aria-checked="false">
+      <span class="switch__track"><span class="switch__knob"></span></span>
+      <span class="switch__label">Adaptive Pricing</span>
+    </button>
+
     <div class="between between--top" style="margin-bottom:var(--sp-3)">
       <div>
         <p class="eyebrow eyebrow--marked">Étape 2 sur 3</p>
@@ -43,10 +53,18 @@
         <div id="banner" class="alert" hidden></div>
 
         <form id="payment-form" class="card card--frame">
+          <!-- Currency Selector Element. Stripe demande de le placer juste
+               au-dessus du Payment Element : la devise choisie change les moyens
+               de paiement proposés en dessous. Monté sans condition — sans
+               `currencyOptions`, il ne rend rien. -->
+          <div id="currency-selector"></div>
+
           <div id="payment-element"></div>
 
           <button id="submit" class="btn btn--block" type="submit" disabled>
-            <span id="submit-label">Payer 75,00 €</span>
+            <!-- Aucun montant en dur : le libellé est écrit depuis la session,
+                 et la devise n'est pas connue avant qu'elle soit chargée. -->
+            <span id="submit-label">Payer</span>
           </button>
 
           <div class="pay-status" id="status"></div>

@@ -4,7 +4,7 @@ const stripe = require('../lib/stripe');
 const { buildMetadata } = require('../lib/metadata');
 const store = require('../lib/store');
 const { generatePnr } = require('../lib/pnr');
-const { BOOKING, FARES, PMC_ID, ORIGIN } = require('../config');
+const { BOOKING, FARES, ORIGIN } = require('../config');
 
 const router = express.Router();
 
@@ -12,7 +12,25 @@ const router = express.Router();
 // toujours le même, et on veut voir son historique s'accumuler.
 async function findOrCreateCustomer() {
   const found = await stripe.customers.list({ email: BOOKING.passenger.email, limit: 1 });
-  if (found.data.length) return found.data[0];
+  if (found.data.length) {
+    const customer = found.data[0];
+
+    // Le client « +location_gb » du bac à sable a été créé hors de ce parcours,
+    // donc sans métadonnées. Or l'espace voyageur retombe sur l'adresse e-mail
+    // quand le numéro de fidélité manque : il projetterait alors le suffixe
+    // technique en pleine démonstration. On complète une fois pour toutes.
+    if (!customer.metadata || !customer.metadata.loyalty_id) {
+      return stripe.customers.update(customer.id, {
+        metadata: {
+          loyalty_id: BOOKING.passenger.loyaltyId,
+          passenger_segment: BOOKING.passengerSegment,
+          sqills_customer_id: 'SQ-CUST-11204',
+        },
+      });
+    }
+
+    return customer;
+  }
 
   return stripe.customers.create({
     email: BOOKING.passenger.email,
@@ -41,7 +59,15 @@ async function findOrCreateCustomer() {
 //   - l'enregistrement reste sans case à cocher — `payment_method_save` est
 //     désactivé et c'est `payment_intent_data.setup_future_usage` qui
 //     enregistre la carte à chaque paiement réussi.
-function createCheckoutSession({ customerId, amount, productName, description, statementSuffix, metadata }) {
+function createCheckoutSession({
+  customerId,
+  amount,
+  productName,
+  description,
+  statementSuffix,
+  metadata,
+  adaptivePricing = false,
+}) {
   return stripe.checkout.sessions.create({
     ui_mode: 'elements',
     mode: 'payment',
@@ -56,7 +82,28 @@ function createCheckoutSession({ customerId, amount, productName, description, s
         },
       },
     ],
-    payment_method_configuration: PMC_ID,
+    // Adaptive Pricing se règle à la création de la session : il ne se modifie
+    // pas sur une session déjà ouverte. C'est pour cette raison que
+    // l'interrupteur de l'écran Paiement recharge la page sur une session neuve
+    // plutôt que de reconfigurer l'instance Checkout du navigateur.
+    //
+    // Le paramètre est toujours transmis, jamais omis. Sans lui, la session
+    // hériterait du réglage du Dashboard — déjà actif sur ce bac à sable — et
+    // l'état « désactivé » de la démonstration ne serait pas démontrable.
+    //
+    // Par défaut à false : la prestation complémentaire de l'espace voyageur
+    // partage cette fabrique mais ne monte pas de Currency Selector Element, or
+    // Stripe exige de l'afficher dès qu'une session peut être convertie.
+    adaptive_pricing: { enabled: Boolean(adaptivePricing) },
+    // Aucune configuration de moyens de paiement n'est épinglée ici, et aucune
+    // liste `payment_method_types` : la session retombe sur la configuration
+    // par défaut du compte et c'est Stripe qui décide quels moyens présenter,
+    // selon le pays du voyageur, la devise et l'appareil.
+    //
+    // Épingler `pmc_…` ne changeait rien à l'écran — cette configuration *est*
+    // la configuration par défaut du compte (`is_default: true`) — mais figeait
+    // dans le code une décision qui appartient au Dashboard. `npm run pmc`
+    // continue de la piloter ; le parcours ne la nomme plus.
     // Aucune case « enregistrer ma carte » : le consentement de la
     // démonstration est porté par setup_future_usage, comme avant.
     saved_payment_method_options: { payment_method_save: 'disabled' },
@@ -77,6 +124,26 @@ function createCheckoutSession({ customerId, amount, productName, description, s
   });
 }
 
+// Ce que l'API a réellement retenu, indépendamment de ce qu'on a demandé.
+function sessionAllowsConversion(session) {
+  return Boolean(session.adaptive_pricing && session.adaptive_pricing.enabled);
+}
+
+// Adaptive Pricing ne change pas la devise d'encaissement : la session et le
+// paiement restent en euros, et c'est `presentment_details` qui porte ce que le
+// voyageur a vu et réglé. Le champ est *absent* quand aucune conversion n'a eu
+// lieu — c'est ce qui distingue les deux états, et pourquoi on ne teste pas
+// `null`.
+function readPresentment(...objects) {
+  const found = objects.find((o) => o && o.presentment_details);
+  if (!found) return { presentmentAmount: null, presentmentCurrency: null };
+
+  return {
+    presentmentAmount: found.presentment_details.presentment_amount,
+    presentmentCurrency: found.presentment_details.presentment_currency,
+  };
+}
+
 // Une référence neuve par réservation, jamais réutilisée par le dossier en
 // mémoire — sinon rien ne distingue une vraie collision d'une simple reprise.
 function freshPnr() {
@@ -94,6 +161,10 @@ router.post('/booking', async (req, res, next) => {
   try {
     const fareKey = FARES[req.body && req.body.tripType] ? req.body.tripType : 'aller_simple';
     const fare = FARES[fareKey];
+    // Seul le booléen `true` active la conversion : une valeur inattendue dans
+    // la requête ne doit pas changer silencieusement la devise présentée au
+    // milieu de la présentation.
+    const adaptivePricing = (req.body && req.body.adaptivePricing) === true;
     const pnr = freshPnr();
 
     const customer = await findOrCreateCustomer();
@@ -109,7 +180,11 @@ router.post('/booking', async (req, res, next) => {
         trip_type: fareKey,
         train_number: BOOKING.trainNumber,
         seat: `${BOOKING.coach}-${BOOKING.seat}`,
+        // Trace du réglage employé : le Dashboard doit pouvoir dire pourquoi ce
+        // dossier a été présenté en livres et le suivant en euros.
+        adaptive_pricing: adaptivePricing ? 'enabled' : 'disabled',
       }),
+      adaptivePricing,
     });
 
     // Le PaymentIntent n'existe pas encore : la session Checkout le crée à la
@@ -126,6 +201,10 @@ router.post('/booking', async (req, res, next) => {
       travelDate: BOOKING.travelDate,
       departure: BOOKING.departure,
       status: 'reservee',
+      // Le dossier retient le réglage : c'est lui qui explique l'écart entre le
+      // montant encaissé et le montant réglé, sur le billet comme au
+      // rapprochement.
+      adaptivePricing: sessionAllowsConversion(session),
     });
 
     res.json({
@@ -136,6 +215,9 @@ router.post('/booking', async (req, res, next) => {
       tripType: fareKey,
       fareLabel: fare.label,
       amount: fare.amount,
+      // On renvoie ce que l'API a répondu, pas ce qu'on a demandé : si le
+      // réglage du compte refusait la conversion, l'écran doit le dire.
+      adaptivePricing: sessionAllowsConversion(session),
       returnUrl: `${ORIGIN}/confirmation?checkout_session=${session.id}`,
     });
   } catch (err) {
@@ -204,6 +286,8 @@ router.get('/checkout/session/:id', async (req, res, next) => {
       paymentIntentId: pi ? pi.id : typeof session.payment_intent === 'string' ? session.payment_intent : null,
       paymentIntentStatus: pi ? pi.status : null,
       bookingReference: (session.metadata && session.metadata.booking_reference) || null,
+      adaptivePricing: sessionAllowsConversion(session),
+      ...readPresentment(session, pi),
     });
   } catch (err) {
     next(err);
@@ -227,6 +311,7 @@ router.get('/payment/:id', async (req, res, next) => {
       currency: pi.currency,
       metadata: pi.metadata,
       created: pi.created,
+      ...readPresentment(pi, charge),
       chargeId: charge ? charge.id : null,
       receiptUrl: charge ? charge.receipt_url : null,
       card: card
